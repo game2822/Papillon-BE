@@ -1,6 +1,7 @@
+import * as Ezly from "ezly";
 import { Session } from "pawdirecte";
 import { Skolengo } from "skolengojs";
-import * as Ezly from "ezly";
+import { SmartSchool } from "smartschooljs";
 
 /**
  * Represents the storage structure for user accounts.
@@ -82,13 +83,14 @@ export interface ServiceAccount {
 export interface Auth {
   accessToken?: string;
   refreshToken?: string;
-  session?: Skolengo | Session | Ezly.Identification;
+  session?: Skolengo | SmartSchool | Session | Ezly.Identification;
   additionals?: Record<string, string | number>;
 }
 
 export enum Services {
   PRONOTE,
   SKOLENGO,
+  SMARTSCHOOL,
   ECOLEDIRECTE,
   TURBOSELF,
   ARD,

@@ -1,9 +1,9 @@
 import { Papicons } from '@getpapillon/papicons';
 import { useTheme } from '@react-navigation/native';
 import { RelativePathString, UnknownInputParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { Services } from '@/stores/account/types';
-import { useTranslation } from 'react-i18next';
 
 export interface SupportedService {
     name: string;
@@ -57,6 +57,17 @@ export function getSupportedServices(redirect: (path: { pathname: string, option
             color: 'light' as const,
         },
         {
+            name: "smartschool",
+            title: "Smartschool",
+            type: "main",
+            image: require("@/assets/images/service_smartschool.png"),
+            onPress: () => {
+                redirect({ pathname: './smartschool/url' });
+            },
+            variant: 'service' as const,
+            color: 'light' as const,
+        },
+        {
             name: "separator",
             title: "separator",
             type: "separator",
@@ -68,17 +79,17 @@ export function getSupportedServices(redirect: (path: { pathname: string, option
             color: 'light' as const,
         },
         /*{
-            name: "university",
-            title: t("ONBOARDING_UNIVERSITY"),
-            type: "other",
-            icon: <Papicons name={"Star"} />,
-            onPress: () => {
-                redirect({ pathname: './university/method' });
-
-            },
-            variant: 'primary' as const,
-            style: { backgroundColor: theme.dark ? colors.border : "black" },
-        }, */
+                    name: "university",
+                    title: t("ONBOARDING_UNIVERSITY"),
+                    type: "other",
+                    icon: <Papicons name={"Star"} />,
+                    onPress: () => {
+                        redirect({ pathname: './university/method' });
+        
+                    },
+                    variant: 'primary' as const,
+                    style: { backgroundColor: theme.dark ? colors.border : "black" },
+                }, */
         {
             name: "university",
             title: t("ONBOARDING_RESTAURANTS"),

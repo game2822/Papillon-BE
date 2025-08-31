@@ -111,6 +111,15 @@ export default function OnboardingLayout() {
                     options={{ ...newScreenOptions }}
                     initialParams={{ ref: {} }}
                 />
+                <Stack.Screen
+                    name="smartschool/url"
+                    options={{ ...newScreenOptions }}
+                />
+                <Stack.Screen
+                    name="smartschool/webview"
+                    options={{ ...newScreenOptions }}
+                    initialParams={{ url: "" }}
+                />
             </Stack>
         </View>
     );
