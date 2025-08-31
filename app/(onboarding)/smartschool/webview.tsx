@@ -34,6 +34,7 @@ export default function WebViewScreen() {
       if (!code) return false;
 
       const auth = await finalizeLogin(InstanceURL, code[1], Device.osName ?? "", Device.deviceName ?? "", deviceUUID)
+      console.log("Auth Data:", auth.toString());
       const store = useAccountStore.getState();
       const id = uuid()
 
