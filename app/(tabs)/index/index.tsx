@@ -121,11 +121,6 @@ export default function TabOneScreen() {
   }, []);
 
   const accounts = useAccountStore((state) => state.accounts);
-
-  if (accounts.length === 0) {
-    router.replace("/(onboarding)/welcome");
-    return null;
-  }
   const theme = useTheme();
   const { colors } = theme;
 
@@ -159,6 +154,10 @@ export default function TabOneScreen() {
     setFullyScrolled(isFullyScrolled);
   }, []);
 
+  if (accounts.length === 0) {
+    router.replace("/(onboarding)/welcome");
+    return null;
+  }
   const headerItems = [
     (
       <Stack
@@ -391,14 +390,14 @@ export default function TabOneScreen() {
             title: "Devmode",
             redirect: "/devmode",
             buttonLabel: "Aller",
-            dev: false
+            dev: true
           },
           {
             icon: <Papicons name={"Butterfly"} />,
             title: "Demo components",
             redirect: "/demo",
             buttonLabel: "Aller",
-            dev: false
+            dev: true
           },
         ].filter(item => item !== false && (item.dev ? __DEV__ : true))}
         keyExtractor={(item) => item.title}

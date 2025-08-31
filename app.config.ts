@@ -1,5 +1,8 @@
 import PackageJSON from "./package.json";
 
+const androidPreVersion = PackageJSON.version.replaceAll(".", "")
+const androidVersionCode = androidPreVersion.length == 3 ? parseInt(androidPreVersion + "00") : androidPreVersion.length == 4 ? parseInt(androidPreVersion + "0") : parseInt(androidPreVersion)
+
 module.exports = {
   expo: {
     name: "Papillon",
@@ -21,6 +24,7 @@ module.exports = {
         "https://apps.apple.com/us/app/papillon-lappli-scolaire/id6477761165",
       bundleIdentifier: "xyz.getpapillon.ios",
       associatedDomains: ["applinks:getpapillon.xyz"],
+      icon: "./assets/images/icon.png",
       minimumOSVersion: "17.6",
       infoPlist: {
         CFBundleURLTypes: [
@@ -35,7 +39,7 @@ module.exports = {
       },
     },
     android: {
-      versionCode: parseInt(PackageJSON.version.replaceAll(".", "") + "0"),
+      versionCode: androidVersionCode,
       package: "xyz.getpapillon.app",
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
@@ -47,6 +51,7 @@ module.exports = {
         resizeMode: "cover",
         backgroundColor: "#003A21",
       },
+      supportsTablet: true,
     },
     web: {
       bundler: "metro",
