@@ -1,14 +1,14 @@
-import { Kind, Lesson, Skolengo } from "skolengojs";
+import { Kind, Lesson, SmartSchool } from "smartschooljs";
 
 import { getDateRangeOfWeek } from "@/database/useHomework";
 
 import { Course, CourseDay, CourseStatus, CourseType } from "../shared/timetable";
 
-export async function fetchSkolengoTimetable(session: Skolengo, accountId: string, weekNumber: number): Promise<CourseDay[]> {
+export async function fetchSkolengoTimetable(session: SmartSchool, accountId: string, weekNumber: number): Promise<CourseDay[]> {
   const { start, end } = getDateRangeOfWeek(weekNumber)
   const result: CourseDay[] = []
 
-  const getTimetable = async (sessionToUse: Skolengo, kidName?: string) => {
+  const getTimetable = async (sessionToUse: SmartSchool, kidName?: string) => {
     const timetable = await sessionToUse.GetTimetable(start, end)
     result.push(...timetable.map(day => ({
       date: day.date,

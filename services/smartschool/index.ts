@@ -1,4 +1,4 @@
-import { Kind, Permissions, SmartSchool as SkolengoSession } from "smartschooljs";
+import { Kind, Permissions, Skolengo as SkolengoSession } from "skolengojs";
 
 import { Auth, Services } from "@/stores/account/types";
 import { error } from "@/utils/logger/logger";
@@ -23,7 +23,7 @@ import { fetchSkolengoTimetable } from "./timetable";
 export class Skolengo implements SchoolServicePlugin {
   displayName = "Smartschool";
   service = Services.SMARTSCHOOL;
-  capabilities: Capabilities[] = [Capabilities.REFRESH, Capabilities.NEWS];
+  capabilities: Capabilities[] = [/*Capabilities.REFRESH,*/ Capabilities.NEWS];
   session: SkolengoSession | undefined = undefined;
   authData: Auth = {};
 
