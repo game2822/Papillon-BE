@@ -48,9 +48,13 @@ export class AccountManager {
       try {
         log("Trying to refresh " + service.id);
         const plugin = this.getServicePluginForAccount(service);
-
+        log("Found plugin for service " + service.id + ": " + plugin.displayName);
+        log("Plugin data: " + JSON.stringify(plugin, null, 2));
+        log("Service auth data: " + JSON.stringify(service.auth, null, 2));
         if (plugin?.capabilities.includes(Capabilities.REFRESH)) {
+          log("Plugin for " + service.id + " supports refresh, refreshing now...");
           this.clients[service.id] = await plugin.refreshAccount(service.auth);
+          log("Refreshed plugin for service " + service.id + ": " + plugin.displayName);
           refreshedAtLeastOne = true;
           log("Successfully refreshed " + service.id);
         } else {
@@ -567,6 +571,7 @@ export const initializeAccountManager = async (accountId?: string): Promise<Acco
   }
 
   const manager = new AccountManager(account);
+  log("Initializing account manager for account: " + manager.getAccount().toString());
   await manager.refreshAllAccounts();
   globalManager = manager;
   notifyManagerListeners(manager);

@@ -1,6 +1,7 @@
 import { Session } from "pawdirecte";
 import { SessionHandle } from "pawnote";
 import { Skolengo as SkolengoSession } from "skolengojs";
+import { SmartSchool as SmartSchoolSession } from "smartschooljs";
 
 import { Pronote } from "@/services/pronote";
 import { Attendance } from "@/services/shared/attendance";
@@ -20,6 +21,7 @@ import { Auth, Services } from "@/stores/account/types";
 
 import { EcoleDirecte } from "../ecoledirecte";
 import { Skolengo } from "../skolengo";
+import { Smartschool } from "../smartschool";
 import { Kid } from "./kid";
 import { Client as TurboselfClient } from "turboself-api";
 import { Client as ArdClient } from "pawrd";
@@ -43,6 +45,7 @@ export interface SchoolServicePlugin {
   session:
     | SessionHandle
     | SkolengoSession
+    | SmartSchoolSession
     | Session
     | TurboselfClient
     | ArdClient
@@ -51,7 +54,7 @@ export interface SchoolServicePlugin {
 
   refreshAccount: (
     credentials: Auth
-  ) => Promise<Pronote | Skolengo | EcoleDirecte | TurboSelf | ARD | Izly>;
+  ) => Promise<Pronote | Skolengo | Smartschool | EcoleDirecte | TurboSelf | ARD | Izly>;
   getKids?: () => Kid[];
   getHomeworks?: (weekNumber: number) => Promise<Homework[]>;
   getNews?: () => Promise<News[]>;

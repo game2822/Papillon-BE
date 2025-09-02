@@ -1,7 +1,7 @@
-import { Kind, Permissions, Skolengo as SkolengoSession } from "skolengojs";
+import { Kind, Permissions, SmartSchool as SmartSchoolSession } from "smartschooljs";
 
 import { Auth, Services } from "@/stores/account/types";
-import { error } from "@/utils/logger/logger";
+import { error, log } from "@/utils/logger/logger";
 
 import { Attendance } from "../shared/attendance";
 import { Chat, Message, Recipient } from "../shared/chat";
@@ -20,21 +20,23 @@ import { fetchSkolengoNews } from "./news";
 import { refreshSkolengoAccount } from "./refresh";
 import { fetchSkolengoTimetable } from "./timetable";
 
-export class Skolengo implements SchoolServicePlugin {
+export class Smartschool implements SchoolServicePlugin {
   displayName = "Smartschool";
   service = Services.SMARTSCHOOL;
-  capabilities: Capabilities[] = [/*Capabilities.REFRESH,*/ Capabilities.NEWS];
-  session: SkolengoSession | undefined = undefined;
+  capabilities: Capabilities[] = [Capabilities.REFRESH, Capabilities.NEWS];
+  session: SmartSchoolSession | undefined = undefined;
   authData: Auth = {};
 
   constructor(public accountId: string){}
 
-  async refreshAccount(credentials: Auth): Promise<Skolengo> {
+  async refreshAccount(credentials: Auth): Promise<Smartschool> {
     if (!credentials.session) {
       error("This account seems to not be initialized")
     }
 
-    const refresh = (await refreshSkolengoAccount(this.accountId, credentials.session as SkolengoSession))
+    log("Refreshing Smartschool account...")
+    const refresh = (await refreshSkolengoAccount(this.accountId, credentials.session as SmartSchoolSession))
+    log("Refresh result: " + JSON.stringify(refresh))
     this.authData = refresh.auth
     this.session = refresh.session
 
