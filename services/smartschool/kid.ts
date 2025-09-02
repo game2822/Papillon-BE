@@ -1,8 +1,8 @@
-import { Skolengo } from "skolengojs";
 
 import { Kid } from "../shared/kid";
+import { SmartSchool } from "smartschooljs";
 
-export function fetchSkolengoKids(session: Skolengo, accountId: string): Kid[] {
+export function fetchSkolengoKids(session: SmartSchool, accountId: string): Kid[] {
   return (session.kids ?? []).map(kid => ({
     id: kid.userId,
     firstName: kid.firstName,
@@ -10,6 +10,5 @@ export function fetchSkolengoKids(session: Skolengo, accountId: string): Kid[] {
     class: kid.className,
     dateOfBirth: kid.dateOfBirth,
     createdByAccount: accountId,
-    ref: kid
   }))
 }

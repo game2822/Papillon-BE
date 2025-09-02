@@ -15,7 +15,7 @@ export async function refreshSkolengoAccount(
   }
 
   log("Refreshed Smartschool account")
-  log("Auth Data" + JSON.stringify(authData, null, 2))
+  log("Auth Data" + JSON.stringify((authData as Auth), null, 2))
   log ("Session Data" + JSON.stringify(session, null, 2))
   useAccountStore.getState().updateServiceAuthData(accountId, authData)
 

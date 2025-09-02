@@ -55,6 +55,7 @@ export class AccountManager {
           log("Plugin for " + service.id + " supports refresh, refreshing now...");
           this.clients[service.id] = await plugin.refreshAccount(service.auth);
           log("Refreshed plugin for service " + service.id + ": " + plugin.displayName);
+          log("Successfully refreshed plugin data: " + JSON.stringify(this.clients[service.id], null, 2));
           refreshedAtLeastOne = true;
           log("Successfully refreshed " + service.id);
         } else {
@@ -266,6 +267,7 @@ export class AccountManager {
       Capabilities.TIMETABLE,
       async client =>
         client.getWeeklyTimetable ? await client.getWeeklyTimetable(weekNumber) : [],
+      
       {
         multiple: true,
         fallback: async () => getCoursesFromCache(weekNumber),

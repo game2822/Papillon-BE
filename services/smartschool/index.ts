@@ -23,7 +23,7 @@ import { fetchSkolengoTimetable } from "./timetable";
 export class Smartschool implements SchoolServicePlugin {
   displayName = "Smartschool";
   service = Services.SMARTSCHOOL;
-  capabilities: Capabilities[] = [Capabilities.REFRESH, Capabilities.NEWS];
+  capabilities: Capabilities[] = [Capabilities.REFRESH, Capabilities.NEWS, Capabilities.TIMETABLE];
   session: SmartSchoolSession | undefined = undefined;
   authData: Auth = {};
 
@@ -36,6 +36,9 @@ export class Smartschool implements SchoolServicePlugin {
 
     log("Refreshing Smartschool account...")
     const refresh = (await refreshSkolengoAccount(this.accountId, credentials.session as SmartSchoolSession))
+    if (!refresh || !refresh.auth || !refresh.session) {
+      throw new Error("Invalid refresh result");
+    }
     log("Refresh result: " + JSON.stringify(refresh))
     this.authData = refresh.auth
     this.session = refresh.session
@@ -48,13 +51,6 @@ export class Smartschool implements SchoolServicePlugin {
       [Permissions.READ_LESSONS]: Capabilities.TIMETABLE,
       [Permissions.READ_EVALUATIONS]: Capabilities.GRADES
     };
-
-    for (const permission of this.session.permissions) {
-      const capability = tabCapabilities[permission];
-      if (capability) {
-        this.capabilities.push(capability)
-      }
-    }
 
     if (this.session.kind === Kind.PARENT) {this.capabilities.push(Capabilities.HAVE_KIDS)}
 

@@ -3,6 +3,7 @@ import { Kind, Lesson, SmartSchool } from "smartschooljs";
 import { getDateRangeOfWeek } from "@/database/useHomework";
 
 import { Course, CourseDay, CourseStatus, CourseType } from "../shared/timetable";
+import { log } from "@/utils/logger/logger";
 
 export async function fetchSkolengoTimetable(session: SmartSchool, accountId: string, weekNumber: number): Promise<CourseDay[]> {
   const { start, end } = getDateRangeOfWeek(weekNumber)
@@ -10,6 +11,7 @@ export async function fetchSkolengoTimetable(session: SmartSchool, accountId: st
 
   const getTimetable = async (sessionToUse: SmartSchool, kidName?: string) => {
     const timetable = await sessionToUse.GetTimetable(start, end)
+    log("Fetched Smartschool timetable: " + JSON.stringify(timetable, null, 2))
     result.push(...timetable.map(day => ({
       date: day.date,
       courses: mapSkolengoCourse(day.lessons, accountId, kidName)

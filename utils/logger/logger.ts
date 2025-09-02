@@ -54,6 +54,8 @@ function error(message: string, from?: string): never {
   const date = getIsoDate()
   const functionName = obtainFunctionName(from)
   const entry = getMessage(1, date, functionName, message);
+  console.log(entry);
+  console.log("message: " + message); 
   saveLog(date, message, LogType.ERROR, functionName);
   console.error(entry);
   throw new Error(entry);
