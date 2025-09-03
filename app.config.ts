@@ -12,6 +12,11 @@ module.exports = {
     icon: "./assets/images/icon.png",
     scheme: "papillon",
     platforms: ["ios", "android"],
+    "extra": {
+        "eas": {
+           "projectId": "af8235bf-19f9-4f5b-a429-7c6e0d384c41"
+         }
+       },
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     splash: {
