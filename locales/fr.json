@@ -46,6 +46,9 @@
   "ONBOARDING_COLOR_TITLE": "Avant de terminer",
   "ONBOARDING_COLOR_FIRST_LINE_DESCRIPTION": "Choisis une",
   "ONBOARDING_COLOR_SECOND_LINE_DESCRIPTION": "couleur de thème",
+  "ONBOARDING_LOGIN_PINCODE": "Entre le Code PIN de ton PRONOTE",
+  "Onboarding_Load_Webview_Description": "Nous chargeons le site de ton établissement",
+  "INPUT_PIN": "Code PIN",
 
   "WAITING": "En attente",
   "IZLY_SMS_SEND": "Tu viens de recevoir un lien pour te connecter, clique dessus et suis les étapes.",
@@ -114,6 +117,8 @@
 
   "Modal_Course_Title": "Mon cours",
   "Modal_Course_StartsIn": "Commence dans",
+  "Modal_Course_StartedAgo": "Terminé il y a",
+  "Modal_Course_Ongoing": "Commencé depuis",
   "Modal_Course_Group": "Groupe",
   "Modal_Course_Group_Full": "Classe",
 
@@ -223,7 +228,7 @@
   "Settings_Donate_Title": "Faire un don",
   "Settings_Donate_Description": "Soutenir le projet",
   "Settings_About_Title": "À propos",
-  "Settings_About_Description": "version 8.0.0",
+  "Settings_About_Description": "Version",
   "Settings_Logout_Title": "Se déconnecter",
   "Settings_Logout_Description": "Supprimer ce compte de Papillon",
 
