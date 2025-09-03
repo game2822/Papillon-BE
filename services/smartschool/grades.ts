@@ -1,11 +1,11 @@
-import { Grade as SkolengoGrade, Kind,Skolengo, Subject as SkolengoSubjects } from "skolengojs";
+import { Grade as SmartSchoolGrade, Kind, SmartSchool, Subject as SmartSchoolSubjects } from "smartschooljs";
 
 import { error } from "@/utils/logger/logger";
 
 import { Grade, GradeScore, Period, PeriodGrades, Subject } from "../shared/grade";
 
-export async function fetchSkolengoGradesForPeriod(session: Skolengo, accountId: string, period: string, kid?: Skolengo): Promise<PeriodGrades> {
-  const getGrades = async (sessionToUse: Skolengo, kidName?: string): Promise<PeriodGrades> => {
+export async function fetchSkolengoGradesForPeriod(session: SmartSchool, accountId: string, period: string, kid?: SmartSchool): Promise<PeriodGrades> {
+  const getGrades = async (sessionToUse: SmartSchool, kidName?: string): Promise<PeriodGrades> => {
     const subjects = await sessionToUse.GetGradesForPeriod(period)
     const studentOverall: GradeScore = {
       value: subjects.reduce((sum, subject) => sum + subject.value, 0) / subjects.length,
@@ -33,17 +33,17 @@ export async function fetchSkolengoGradesForPeriod(session: Skolengo, accountId:
 	
 }
 
-export async function fetchSkolengoGradePeriods(session: Skolengo, accountId: string): Promise<Period[]> {
+export async function fetchSkolengoGradePeriods(session: SmartSchool, accountId: string): Promise<Period[]> {
   const result: Period[] = []
 	
   if (session.kind === Kind.STUDENT) {
     const periods = (await session.GetGradesSettings()).periods
     for (const period of periods) {
       result.push({
-        name: period.label,
-        id: period.id,
-        start: period.startDate,
-        end: period.endDate,
+        name: "test",
+        id: "1",
+        start: new Date("2025-09-04"),
+        end: new Date("2026-06-27"),
         createdByAccount: accountId
       })
     }
@@ -52,10 +52,10 @@ export async function fetchSkolengoGradePeriods(session: Skolengo, accountId: st
       const periods = (await kid.GetGradesSettings()).periods
       for (const period of periods) {
         result.push({
-          name: period.label,
-          id: period.id,
-          start: period.startDate,
-          end: period.endDate,
+          name: "test",
+          id: "1",
+          start: new Date("2025-09-04"),
+          end: new Date("2026-06-27"),
           createdByAccount: accountId,
           kidName: `${kid.firstName} ${kid.lastName}`
         })
@@ -65,28 +65,28 @@ export async function fetchSkolengoGradePeriods(session: Skolengo, accountId: st
   return result
 }
 
-function mapSkolengoGrades(grades: SkolengoGrade[], accountId: string, kidName?: string): Grade[] {
+function mapSkolengoGrades(grades: SmartSchoolGrade[], accountId: string, kidName?: string): Grade[] {
   return grades.map(grade => ({
-    id: grade.id,
-    subjectId: grade.subject?.id ?? "",
-    subjectName: grade.subject?.label ?? "",
-    description: grade.title ?? "",
-    givenAt: grade.date,
-    outOf: { value: grade.outOf },
-    coefficient: grade.coefficient,
-    studentScore: { value: grade.value, disabled: !grade.isGraded, status: grade.notGradedReason },
+    id: "1",
+    subjectId: "1",
+    subjectName: "test",
+    description: "test",
+    givenAt: new Date("2025-09-04"),
+    outOf: { value: 5 },
+    coefficient: 2,
+    studentScore: { value: 4, disabled: false, status: undefined },
     createdByAccount: accountId,
     kidName: kidName
   }))
 }
 
-function mapSkolengoSubjects(subjects: SkolengoSubjects[], accountId: string, kidName?: string): Subject[] {
+function mapSkolengoSubjects(subjects: SmartSchoolSubjects[], accountId: string, kidName?: string): Subject[] {
   return subjects.map(subject => ({
-    id: subject.id,
-    name: subject.name,
-    classAverage: { value: subject.average },
-    studentAverage: { value: subject.value },
-    outOf: { value: subject.outOf },
+    id: "1",
+    name: "test",
+    classAverage: { value: 10 },
+    studentAverage: { value: 10 },
+    outOf: { value: 10 },
     grades: mapSkolengoGrades(subject.grades, accountId, kidName)
   }))
 }

@@ -1,6 +1,7 @@
 
-import { Kid } from "../shared/kid";
 import { SmartSchool } from "smartschooljs";
+
+import { Kid } from "../shared/kid";
 
 export function fetchSkolengoKids(session: SmartSchool, accountId: string): Kid[] {
   return (session.kids ?? []).map(kid => ({

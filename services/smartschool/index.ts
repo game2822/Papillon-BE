@@ -1,4 +1,5 @@
-import { Kind, Permissions, SmartSchool as SmartSchoolSession } from "smartschooljs";
+ 
+import { Kind, SmartSchool as SmartSchoolSession } from "smartschooljs";
 
 import { Auth, Services } from "@/stores/account/types";
 import { error, log } from "@/utils/logger/logger";
@@ -13,7 +14,7 @@ import { CourseDay } from "../shared/timetable";
 import { Capabilities, SchoolServicePlugin } from "../shared/types";
 import { fetchSkolengoAttendance } from "./attendance";
 import { createSkolengoMail, fetchSkolengoChatMessages, fetchSkolengoChatRecipients, fetchSkolengoChats } from "./chat";
-import { fetchSkolengoGradePeriods, fetchSkolengoGradesForPeriod } from "./grades";
+import { fetchSkolengoGradePeriods ,fetchSkolengoGradesForPeriod } from "./grades";
 import { fetchSkolengoHomeworks, setSkolengoHomeworkAsDone } from "./homework";
 import { fetchSkolengoKids } from "./kid";
 import { fetchSkolengoNews } from "./news";
@@ -42,15 +43,6 @@ export class Smartschool implements SchoolServicePlugin {
     log("Refresh result: " + JSON.stringify(refresh))
     this.authData = refresh.auth
     this.session = refresh.session
-
-    const tabCapabilities: Partial<Record<Permissions, Capabilities>> = {
-      [Permissions.READ_ASSIGNMENTS]: Capabilities.HOMEWORK,
-      [Permissions.READ_MESSAGES]: Capabilities.CHAT_READ,
-      [Permissions.WRITE_MESSAGES]: Capabilities.CHAT_CREATE,
-      [Permissions.READ_ABSENCE_FILES]: Capabilities.ATTENDANCE,
-      [Permissions.READ_LESSONS]: Capabilities.TIMETABLE,
-      [Permissions.READ_EVALUATIONS]: Capabilities.GRADES
-    };
 
     if (this.session.kind === Kind.PARENT) {this.capabilities.push(Capabilities.HAVE_KIDS)}
 
@@ -83,7 +75,7 @@ export class Smartschool implements SchoolServicePlugin {
 
   async getGradesForPeriod(period: Period, kid?: Kid): Promise<PeriodGrades> {
     if (kid?.ref && this.session) {
-      return fetchSkolengoGradesForPeriod(this.session, this.accountId, period.id!, kid?.ref)
+      return fetchSkolengoGradesForPeriod(this.session, this.accountId, period.id!)
     }
         
     if (this.session && this.session.kind === Kind.STUDENT ) {
@@ -111,7 +103,9 @@ export class Smartschool implements SchoolServicePlugin {
 
   async getWeeklyTimetable(weekNumber: number): Promise<CourseDay[]> {
     if (this.session) {
-      return fetchSkolengoTimetable(this.session, this.accountId, weekNumber)
+      const timetable = await fetchSkolengoTimetable(this.session, this.accountId, weekNumber)
+      log("Fetched timetable: " + JSON.stringify(timetable))
+      return timetable
     }
         
     error("Session is not valid", "Skolengo.getWeeklyTimetable")
