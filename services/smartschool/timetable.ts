@@ -46,7 +46,7 @@ function mapSkolengoCourse(data: Lesson[], accountId: string): Course[] {
     from: lesson.startDateTime,
     to: lesson.endDateTime,
     room: lesson.room,
-    teacher: lesson.teacher.map(t => `${t.firstName} ${t.lastName}`).join(", "),
+    teacher: lesson.teacher.map(t => `${t.name}`).join(", "),
     backgroundColor: lesson.subject.color,
     status: lesson.canceled ? CourseStatus.CANCELED : undefined,
     createdByAccount: accountId

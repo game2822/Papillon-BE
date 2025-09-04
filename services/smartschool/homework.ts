@@ -27,15 +27,15 @@ export async function fetchSkolengoHomeworks(session: SmartSchool, accountId: st
         createdByAccount: accountId,
         id: homework.id,
         subject: homework.subject.label,
-        content: homework.html,
+        content: homework.title,
         dueDate: homework.dueDateTime,
         isDone: homework.done,
-        returnFormat: homework.deliverWorkOnline ? ReturnFormat.FILE_UPLOAD : ReturnFormat.PAPER,
+        returnFormat: ReturnFormat.PAPER,
         attachments: attachments[homework.id],
         evaluation: false,
         custom: false,
-        ref: homework,
-        kidName: kidName
+        kidName: kidName,
+        ref: homework
       });
     }
   };
@@ -53,7 +53,7 @@ export async function fetchSkolengoHomeworks(session: SmartSchool, accountId: st
 
 export async function setSkolengoHomeworkAsDone(accountId: string, homework: Homework, status?: boolean): Promise<Homework> {
   if (!homework.ref) {
-    error("Invalid Homework Reference")
+    error("Invalid Homework Reference" + JSON.stringify(homework), "setSkolengoHomeworkAsDone")
   }
 
   const state = await homework.ref.setCompletion(status || !homework.isDone)
@@ -77,6 +77,5 @@ export async function setSkolengoHomeworkAsDone(accountId: string, homework: Hom
     attachments: attachments,
     evaluation: false,
     custom: false,
-    ref: state
   }
 }

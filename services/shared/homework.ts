@@ -1,4 +1,5 @@
 import { Assignment } from "skolengojs";
+import { Assignment as AssignmentSmartschool } from "smartschooljs";
 
 import { Attachment } from "@/services/shared/attachment";
 import { GenericInterface } from "@/services/shared/types";
@@ -27,7 +28,7 @@ export interface Homework extends GenericInterface{
   evaluation: boolean;
   custom: boolean;
   progress?: number;
-	ref?: Assignment;
+	ref?: Assignment | AssignmentSmartschool;
 }
 
 export enum ReturnFormat {

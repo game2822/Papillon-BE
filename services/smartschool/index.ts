@@ -24,7 +24,7 @@ import { fetchSkolengoTimetable } from "./timetable";
 export class Smartschool implements SchoolServicePlugin {
   displayName = "Smartschool";
   service = Services.SMARTSCHOOL;
-  capabilities: Capabilities[] = [Capabilities.REFRESH, Capabilities.NEWS, Capabilities.TIMETABLE];
+  capabilities: Capabilities[] = [Capabilities.REFRESH, Capabilities.NEWS, Capabilities.TIMETABLE, Capabilities.HOMEWORK];
   session: SmartSchoolSession | undefined = undefined;
   authData: Auth = {};
 
