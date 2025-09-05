@@ -40,10 +40,10 @@ export async function fetchSkolengoGradePeriods(session: SmartSchool, accountId:
     const periods = (await session.GetGradesSettings()).periods
     for (const period of periods) {
       result.push({
-        name: "test",
-        id: "1",
-        start: new Date("2025-09-04"),
-        end: new Date("2026-06-27"),
+        name: period.label,
+        id: period.id,
+        start: new Date(period.startDate),
+        end: new Date(period.endDate),
         createdByAccount: accountId
       })
     }
@@ -52,10 +52,10 @@ export async function fetchSkolengoGradePeriods(session: SmartSchool, accountId:
       const periods = (await kid.GetGradesSettings()).periods
       for (const period of periods) {
         result.push({
-          name: "test",
-          id: "1",
-          start: new Date("2025-09-04"),
-          end: new Date("2026-06-27"),
+          name: period.label,
+          id: period.id,
+          start: new Date(period.startDate),
+          end: new Date(period.endDate),
           createdByAccount: accountId,
           kidName: `${kid.firstName} ${kid.lastName}`
         })
@@ -67,14 +67,14 @@ export async function fetchSkolengoGradePeriods(session: SmartSchool, accountId:
 
 function mapSkolengoGrades(grades: SmartSchoolGrade[], accountId: string, kidName?: string): Grade[] {
   return grades.map(grade => ({
-    id: "1",
-    subjectId: "1",
-    subjectName: "test",
-    description: "test",
-    givenAt: new Date("2025-09-04"),
-    outOf: { value: 5 },
-    coefficient: 2,
-    studentScore: { value: 4, disabled: false, status: undefined },
+    id: grade.id,
+    subjectId: grade.subject?.id ?? "",
+    subjectName: grade.subject?.label ?? "",
+    description: grade.topic ?? "",
+    givenAt: grade.date ?? "",
+    outOf: { value: grade.outOf },
+    coefficient: grade.coefficient ?? 1,
+    studentScore: { value: grade.value ?? 0, disabled: grade.isGraded },
     createdByAccount: accountId,
     kidName: kidName
   }))
@@ -82,11 +82,11 @@ function mapSkolengoGrades(grades: SmartSchoolGrade[], accountId: string, kidNam
 
 function mapSkolengoSubjects(subjects: SmartSchoolSubjects[], accountId: string, kidName?: string): Subject[] {
   return subjects.map(subject => ({
-    id: "1",
-    name: "test",
-    classAverage: { value: 10 },
-    studentAverage: { value: 10 },
-    outOf: { value: 10 },
-    grades: mapSkolengoGrades(subject.grades, accountId, kidName)
+    id: subject.id,
+    name: subject.name,
+    classAverage: { value: subject.average ?? 0 },
+    studentAverage: { value: subject.average ?? 0 },
+    outOf: { value: subject.outOf ?? 0 },
+    grades: mapSkolengoGrades([], accountId, kidName)
   }))
 }
