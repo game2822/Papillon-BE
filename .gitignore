@@ -47,4 +47,10 @@ android/*
 !android/app/src/main/
 !android/app/src/main/AndroidManifest.xml
 
+<<<<<<< HEAD
 # bun.lock
+=======
+bun.lock
+
+secrets.json
+>>>>>>> upstream/main

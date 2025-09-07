@@ -39,11 +39,34 @@ import { getCurrentPeriod } from "@/utils/grades/helper/period";
 import GradesWidget from "./widgets/Grades";
 import { Pattern } from "@/ui/components/Pattern/Pattern";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTimetable } from "@/database/useTimetable";
+import { on } from "events";
+import { checkConsent } from "@/utils/logger/consent";
+import { useSettingsStore } from "@/stores/settings";
 
 export default function TabOneScreen() {
+  const now = new Date();
+  const weekNumber = getWeekNumberFromDate(now)
   const [currentPage, setCurrentPage] = useState(0);
+  const accounts = useAccountStore((state) => state.accounts);
+  const lastUsedAccount = useAccountStore((state) => state.lastUsedAccount);
+  const account = accounts.find((a) => a.id === lastUsedAccount);
+
+  const services = useMemo(() =>
+    account?.services?.map((service: { id: string }) => service.id) ?? [],
+    [account?.services]
+  );
 
   const [courses, setCourses] = useState<SharedCourse[]>([]);
+
+  const timetableData = useTimetable(undefined, weekNumber);
+  const weeklyTimetable = useMemo(() =>
+    timetableData.map(day => ({
+      ...day,
+      courses: day.courses.filter(course => services.includes(course.createdByAccount))
+    })).filter(day => day.courses.length > 0),
+    [timetableData, services]
+  );
   const [grades, setGrades] = useState<Grade[]>([]);
 
   const insets = useSafeAreaInsets();
@@ -51,9 +74,34 @@ export default function TabOneScreen() {
   const navigation = useNavigation();
   const alert = useAlert();
 
+  const settingsStore = useSettingsStore(state => state.personalization)
+
+  useEffect(() => {
+    checkConsent().then(consent => {
+      if (!consent.given) {
+        router.push("../consent");
+      }
+    })
+  }, [])
+
   const Initialize = async () => {
     try {
       await initializeAccountManager()
+      log("Refreshed Manager received")
+
+      await Promise.all([fetchEDT(), fetchGrades()]);
+
+      if (settingsStore.showAlertAtLogin) {
+        alert.showAlert({
+          title: "Synchronisation réussie",
+          description: "Toutes vos données ont été mises à jour avec succès.",
+          icon: "CheckCircle",
+          color: "#00C851",
+          withoutNavbar: true,
+          delay: 1000
+        });
+      }
+
     } catch (error) {
       alert.showAlert({
         title: "Connexion impossible",
@@ -63,25 +111,18 @@ export default function TabOneScreen() {
         technical: String(error)
       })
     }
-    log("Refreshed Manager received")
   };
 
   useMemo(() => {
     Initialize();
   }, []);
 
+
   const fetchEDT = useCallback(async () => {
     const manager = getManager();
-    if (!manager) {
-      warn('Manager is null, skipping EDT fetch');
-      return;
-    }
     const date = new Date();
-    date.setUTCHours(0, 0, 0, 0);
-    const currentWeekNumber = getWeekNumberFromDate(date)
-    const weeklyTimetable = await manager.getWeeklyTimetable(currentWeekNumber)
-    const dayCourse = weeklyTimetable.find(day => day.date.getTime() === date.getTime())?.courses ?? []
-    return setCourses(dayCourse.filter(courses => courses.from.getTime() > date.getTime()))
+    const weekNumber = getWeekNumberFromDate(date)
+    await manager.getWeeklyTimetable(weekNumber)
   }, []);
 
   const fetchGrades = useCallback(async () => {
@@ -113,6 +154,13 @@ export default function TabOneScreen() {
   }, [])
 
   useEffect(() => {
+    date.setUTCHours(0, 0, 0, 0);
+
+    const dayCourse = weeklyTimetable.find(day => day.date.getTime() === date.getTime())?.courses ?? [];
+    setCourses(dayCourse.filter(course => course.from.getTime() > date.getTime()));
+  }, [weeklyTimetable]);
+
+  useEffect(() => {
     const unsubscribe = subscribeManagerUpdate((_) => {
       fetchEDT()
       fetchGrades()
@@ -121,13 +169,8 @@ export default function TabOneScreen() {
     return () => unsubscribe();
   }, []);
 
-  const accounts = useAccountStore((state) => state.accounts);
   const theme = useTheme();
   const { colors } = theme;
-
-  const lastUsedAccount = useAccountStore((state) => state.lastUsedAccount);
-
-  const account = accounts.find((a) => a.id === lastUsedAccount);
 
   const [firstName] = useMemo(() => {
     if (!lastUsedAccount) return [null, null, null, null];
@@ -301,6 +344,12 @@ export default function TabOneScreen() {
         }
         gap={12}
         data={[
+          {
+            icon: <Papicons name={"Butterfly"} />,
+            title: "Papillon 8 est là !",
+            redirect: "/changelog",
+            buttonLabel: "En savoir plus"
+          },
           courses.length > 0 && {
             icon: <Papicons name={"Calendar"} />,
             title: t("Home_Widget_NextCourses"),

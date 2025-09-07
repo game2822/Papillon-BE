@@ -21,18 +21,23 @@ import { useAccountStore } from "@/stores/account";
 import { error } from "@/utils/logger/logger";
 import { ClearDatabaseForAccount } from "@/database/DatabaseProvider";
 import AnimatedPressable from "@/ui/components/AnimatedPressable";
-import { Avatar } from "../(features)/(news)/news";
 import * as WebBrowser from "expo-web-browser";
 import packagejson from "../../package.json"
+import Avatar from "@/ui/components/Avatar";
+import { getInitials } from "@/utils/chats/initials";
+import { useSettingsStore } from "@/stores/settings";
 
-const SettingsIndex = () => {
+export default function SettingsIndex() {
   const router = useRouter();
+
   const theme = useTheme();
   const { colors } = theme;
 
   const accountStore = useAccountStore();
   const accounts = useAccountStore((state) => state.accounts);
   const lastUsedAccount = useAccountStore((state) => state.lastUsedAccount);
+
+  const settingsStore = useSettingsStore(state => state.personalization);
 
   const account = accounts.find((a) => a.id === lastUsedAccount);
 
@@ -64,6 +69,14 @@ const SettingsIndex = () => {
     {
       title: t('Settings_More'),
       content: [
+        ...(settingsStore.showDevMode ? [{
+          title: "Mode développeur",
+          description: "Options avancées pour les développeurs.",
+          papicon: <Papicons name={"Code"} />,
+          icon: <InfoIcon />,
+          color: "#FF6B35",
+          onPress: () => router.navigate("/devmode")
+        }] : []),
         {
           title: t('Settings_Accessibility_Title'),
           description: t('Settings_Accessibility_Description'),
@@ -79,6 +92,14 @@ const SettingsIndex = () => {
           icon: <HeartIcon />,
           color: "#EFA400",
           onPress: () => WebBrowser.openBrowserAsync("https://go.papillon.bzh/donate")
+        },
+        {
+          title: t('Settings_Telemetry_Title'),
+          description: `${t('Settings_Telemetry_Description')}`,
+          icon: <InfoIcon />,
+          papicon: <Papicons name={"Check"} />,
+          color: "#797979",
+          onPress: () => router.navigate("../consent")
         },
         {
           title: t('Settings_About_Title'),
@@ -128,8 +149,8 @@ const SettingsIndex = () => {
   }> = [
       {
         icon: <Papicons name={"Palette"} />,
-        title: "Personnalisation",
-        description: "Thèmes, matières...",
+        title: t('Settings_Personalization_Title_Card'),
+        description: t('Settings_Personalization_Subtitle_Card'),
         color: "#17C300",
         onPress: () => {
           router.navigate("/(settings)/personalization")
@@ -138,14 +159,17 @@ const SettingsIndex = () => {
       {
         icon: <Papicons name={"User"} />,
         title: "Services",
-        description: "Comptes liés",
+        description: t('Settings_Services_Title'),
         color: "#DD9B00",
         disabled: true,
+        onPress: () => {
+          Alert.alert("Ça arrive... ✨", "Cette fonctionnalité n'est pas encore disponible.")
+        }
       },
       {
         icon: <Papicons name={"Card"} />,
         title: t("Settings_Cards_Banner_Title"),
-        description: "Cantine, accès",
+        description: t('Settings_Cantineen_Subtitle_Card'),
         color: "#0059DD",
         onPress: () => {
           router.navigate("/(settings)/cards")
@@ -154,7 +178,7 @@ const SettingsIndex = () => {
       {
         icon: <Papicons name={"Sparkles"} />,
         title: "Magic+",
-        description: "Fonctions I.A",
+        description: t('Settings_MagicPlus_Description_Card'),
         color: "#DD007D",
         onPress: () => {
           router.navigate("/(settings)/magic")
@@ -215,17 +239,11 @@ const SettingsIndex = () => {
                 onPress={() => router.navigate("/(settings)/services")}
               >
                 <Leading>
-                  {account && account.customisation && account.customisation.profilePicture ? (
-                    <Image
-                      source={
-                        { uri: `data:image/png;base64,${account.customisation.profilePicture}` }
-                      }
-                      style={{ width: 48, height: 48, borderRadius: 500 }}
-                    />
-                  ) : (
-                    <Avatar size={48} variant="h3" author={`${account?.firstName} ${account?.lastName}`} />
-                  )
-                  }
+                  <Avatar
+                    size={48}
+                    initials={getInitials(`${account?.firstName} ${account?.lastName}`)}
+                    imageUrl={account && account.customisation && account.customisation.profilePicture ? `data:image/png;base64,${account.customisation.profilePicture}` : undefined}
+                  />
                 </Leading>
                 <Typography variant="title">
                   {firstName || lastName ? `${firstName || ''} ${lastName || ''}`.trim() : t('Settings_NoAccount')}
@@ -295,5 +313,3 @@ const SettingsIndex = () => {
     </>
   );
 };
-
-export default SettingsIndex;

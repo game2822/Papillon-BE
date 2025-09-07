@@ -29,6 +29,7 @@ import AnimatedNumber from "@/ui/components/AnimatedNumber";
 import { getDateWeek } from "@/utils/week";
 import { predictHomework } from "@/utils/magic/prediction";
 import { useSettingsStore } from "@/stores/settings";
+import { getWeekNumberFromDate } from "@/database/useHomework";
 
 const useMagicPrediction = (content: string) => {
   const [magic, setMagic] = useState<any>(undefined);
@@ -68,24 +69,28 @@ const TaskItem = memo(({ item, index, onProgressChange }: {
   index: number;
   onProgressChange: (index: number, newProgress: number) => void;
 }) => {
-  const cleanContent = item.content.replace(/<[^>]*>/g, "");
-  const magic = useMagicPrediction(cleanContent);
+  try {
+    const cleanContent = item.content.replace(/<[^>]*>/g, "");
+    const magic = useMagicPrediction(cleanContent);
 
-  return (
-    <Task
-      subject={getSubjectName(item.subject)}
-      emoji={getSubjectEmoji(item.subject)}
-      title={""}
-      color={getSubjectColor(item.subject)}
-      description={cleanContent}
-      date={new Date(item.dueDate)}
-      progress={item.isDone ? 1 : 0}
-      index={index}
-      magic={magic}
-      fromCache={item.fromCache ?? false}
-      onProgressChange={(newProgress: number) => onProgressChange(index, newProgress)}
-    />
-  );
+    return (
+      <Task
+        subject={getSubjectName(item.subject)}
+        emoji={getSubjectEmoji(item.subject)}
+        title={""}
+        color={getSubjectColor(item.subject)}
+        description={cleanContent}
+        date={new Date(item.dueDate)}
+        progress={item.isDone ? 1 : 0}
+        index={index}
+        magic={magic}
+        fromCache={item.fromCache ?? false}
+        onProgressChange={(newProgress: number) => onProgressChange(index, newProgress)}
+      />
+    );
+  } catch (error) {
+    return null;
+  }
 });
 
 const EmptyListComponent = memo(() => (
@@ -118,7 +123,7 @@ export default function TabOneScreen() {
   const windowDimensions = useWindowDimensions();
 
   const currentDate = new Date();
-  const weekNumber = getDateWeek(currentDate);
+  const weekNumber = getWeekNumberFromDate(currentDate)
 
   const [fullyScrolled, setFullyScrolled] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState(weekNumber);
@@ -170,7 +175,7 @@ export default function TabOneScreen() {
         alert.showAlert({
           title: "Une erreur est survenue",
           message: "Ce devoir n'a pas été mis à jour",
-          description: "Nous n'avons pas réussi à mettre à jour l'état du devoir, si ce devoir est important, merci de vous rendre sur l'application officiel de votre établissement afin de définir son état.",
+          description: "Nous n'avons pas réussi à mettre à jour l'état du devoir, si ce devoir est important, merci de vous rendre sur l'application officielle de votre établissement afin de définir son état.",
           color: "#D60046",
           icon: "TriangleAlert",
           technical: String(error)

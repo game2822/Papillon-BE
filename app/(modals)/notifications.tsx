@@ -5,7 +5,7 @@ import { useTheme } from "@react-navigation/native";
 import { useTranslation } from "react-i18next";
 import { Dimensions } from "react-native";
 
-const NotificationsModal = () => {
+export default function NotificationsModal() {
   const { colors } = useTheme();
   const { t } = useTranslation();
 
@@ -21,10 +21,8 @@ const NotificationsModal = () => {
         {t("Feature_Soon")}
       </Typography>
       <Typography variant={"caption"} align={"center"} color={"secondary"}>
-        Nous travaillons dur pour vous offrir cette fonctionnalité dans une future mise à jour.
+        {t("Feature_Soon_Notification")}
       </Typography>
     </Stack>
   )
 }
-
-export default NotificationsModal;
