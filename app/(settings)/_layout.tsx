@@ -6,13 +6,21 @@ import { runsIOS26 } from "@/ui/utils/IsLiquidGlass";
 import { screenOptions } from "@/utils/theme/ScreenOptions";
 import { Platform } from "react-native";
 
+/**
+ * Settings stack layout component that configures and returns the navigator for all settings-related screens.
+ *
+ * Renders an Expo Router Stack with memoized base screen options (shows headers, uses `runsIOS26()` for large-title behavior,
+ * and enables back visibility) and declares each settings screen with localized header titles and screen-specific options.
+ *
+ * @returns The configured Stack navigator for the settings section.
+ */
 export default function Layout() {
   const { t } = useTranslation();
 
   const newScreenOptions = React.useMemo(() => ({
     ...screenOptions,
     headerShown: true,
-    headerLargeTitle: runsIOS26,
+    headerLargeTitle: runsIOS26(),
     headerBackVisible: true,
   }), []);
 
@@ -70,7 +78,7 @@ export default function Layout() {
         options={{
           headerTitle: t("Settings_MagicPlus_Title"),
           headerBackButtonDisplayMode: "minimal",
-          headerTransparent: false,
+          headerTransparent: Platform.OS === "ios",
           headerLargeTitle: false,
         }}
       />
@@ -93,6 +101,15 @@ export default function Layout() {
           contentStyle: {
             borderRadius: Platform.OS === 'ios' ? 30 : 0,
           }
+        }}
+      />
+      <Stack.Screen
+        name="language"
+        options={{
+          headerTitle: t("Settings_Language_Title"),
+          headerBackButtonDisplayMode: "minimal",
+          headerTransparent: false,
+          headerLargeTitle: false,
         }}
       />
     </Stack>
