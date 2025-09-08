@@ -2,10 +2,7 @@ import { useTheme } from '@react-navigation/native';
 import { RelativePathString, router, useFocusEffect, useGlobalSearchParams } from 'expo-router';
 import LottieView from 'lottie-react-native';
 
-import Typography from '@/ui/components/Typography';
-import Icon from '@/ui/components/Icon';
 import { GetLoginMethods, LoginMethod } from '../utils/constants';
-import AnimatedPressable from '@/ui/components/AnimatedPressable';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Reanimated, { FadeInDown } from 'react-native-reanimated';
