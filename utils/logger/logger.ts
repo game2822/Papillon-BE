@@ -63,9 +63,8 @@ function error(message: string, from?: string): never {
   console.log(entry);
   console.log("message: " + message); 
   saveLog(date, message, LogType.ERROR, functionName);
-  console.error(entry);
-  // Sends crash to the server (if consent given)
-  Countly.logException(entry, true, JSON.parse(JSON.stringify(entry)));
+  console.error(message);
+  Countly.logException(message, true, JSON.parse(JSON.stringify(entry)));
   throw new Error(entry);
 
 }

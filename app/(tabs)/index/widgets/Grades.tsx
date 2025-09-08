@@ -18,7 +18,7 @@ import PapillonSubjectAvg from "@/utils/grades/algorithms/subject";
 import PapillonWeightedAvg from "@/utils/grades/algorithms/weighted";
 import { getCurrentPeriod } from "@/utils/grades/helper/period";
 
-export const avgAlgorithms = [
+const avgAlgorithms = [
   {
     label: t("Grades_Avg_All_Title"),
     short: t("Grades_Avg_All_Short"),
@@ -315,4 +315,4 @@ const GradesWidget = (
   )
 }
 
-export default memo(GradesWidget);
+export default GradesWidget;
