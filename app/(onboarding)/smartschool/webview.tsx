@@ -8,6 +8,7 @@ import OnboardingWebview from "@/components/onboarding/OnboardingWebview";
 import { ShouldStartLoadRequest } from "react-native-webview/lib/WebViewTypes";
 import { useTranslation } from "react-i18next";
 import * as Device from 'expo-device';
+import { URLToBase64 } from "@/utils/attachments/helper";
 
 export default function WebViewScreen() {
   const { url: InstanceURL } = useGlobalSearchParams<{ url: string }>();
@@ -37,13 +38,20 @@ export default function WebViewScreen() {
       console.log("Auth Data:", auth.toString());
       const store = useAccountStore.getState();
       const id = auth?.SMSCMobileID;
-
+      let pp = "";
+      if (auth.pp) {
+        pp = await URLToBase64(auth.pp)
+      }
       const account: Account = {
         id,
         firstName: auth?.firstName ?? "",
         lastName: auth?.lastName ?? "",
         schoolName: "schoolName",
         className: auth?.className,
+        customisation: {
+          profilePicture: auth?.pp ?? "",
+          subjects: {}
+        },
         services: [
           {
             id: id,

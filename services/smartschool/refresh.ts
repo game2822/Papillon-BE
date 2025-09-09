@@ -1,23 +1,26 @@
-import { SmartSchool } from "smartschooljs";
+import { LoginWithToken, SmartSchool } from "smartschooljs";
 
 import { useAccountStore } from "@/stores/account";
 import { Auth } from "@/stores/account/types";
-import { log } from "@/utils/logger/logger";
+import { error } from "@/utils/logger/logger";
+import * as device from "expo-device";
 
 export async function refreshSkolengoAccount(
   accountId: string,
-  session: SmartSchool
+  credentials: Auth
 ): Promise<{auth: Auth, session: SmartSchool}> {
-  log("Session object" + JSON.stringify(session, null, 2));
-  await session.refreshAccessToken();
+  if (!credentials.refreshToken) {
+    error("Unable to find refreshToken")
+  }
+  const refreshUrl: string = String(credentials.additionals?.["refreshUrl"] || "");
+  const session = await LoginWithToken(refreshUrl, credentials.refreshToken, device.osName ?? "", device.deviceName ?? "", device.modelId ?? "");
+
   const authData: Auth = {
-    session
+    accessToken: session.refreshToken,
+    refreshToken: session.refreshToken,
   }
 
-  log("Refreshed Smartschool account")
-  log("Auth Data" + JSON.stringify((authData as Auth), null, 2))
-  log ("Session Data" + JSON.stringify(session, null, 2))
   useAccountStore.getState().updateServiceAuthData(accountId, authData)
-
+  
   return { auth: authData, session }
 }
