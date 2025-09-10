@@ -1,0 +1,51 @@
+name: Build Unsigned Applications
+
+on:
+  workflow_dispatch:
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧹 • Clean Environment
+        run: |
+          rm -rf node_modules
+          rm -rf android
+          rm -rf ios
+          rm -rf ~/Library/Developer/Xcode/DerivedData
+          rm -rf $HOME/.gradle/caches/
+       
+  build_android:
+    needs: clean
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+     
+      - name: 📀 • Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: ☕ • Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '20'
+
+      - name: 🗂️ • Install Node Dependencies
+        run: npm install --force
+
+      - name: 🔨 • Prebuild Android
+        run: |
+          npx expo prebuild -p android
+
+      - name: 🏗️ • Build Android
+        run: |
+          cd android
+          ./gradlew assembleRelease
+
+      - name: 🌍 • Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-debug
+          path: android/app/build/outputs/apk/release/app-release.apk
