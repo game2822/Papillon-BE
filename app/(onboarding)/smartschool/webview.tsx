@@ -9,6 +9,7 @@ import { ShouldStartLoadRequest } from "react-native-webview/lib/WebViewTypes";
 import { useTranslation } from "react-i18next";
 import * as Device from 'expo-device';
 import { URLToBase64 } from "@/utils/attachments/helper";
+import { log } from "@/utils/logger/logger";
 
 export default function WebViewScreen() {
   const { url: InstanceURL } = useGlobalSearchParams<{ url: string }>();
@@ -33,8 +34,9 @@ export default function WebViewScreen() {
       const code = url.match(/code=([^&]*)/)
 
       if (!code) return false;
-
+      log("Authorization code received:", code[1].toString());
       const auth = await finalizeLogin(InstanceURL, code[1], Device.osName ?? "", Device.deviceName ?? "", deviceUUID)
+      log("Auth!!!!!!!!")
       console.log("Auth Data:", auth.toString());
       const store = useAccountStore.getState();
       const id = auth?.SMSCMobileID;
@@ -49,14 +51,18 @@ export default function WebViewScreen() {
         schoolName: "schoolName",
         className: auth?.className,
         customisation: {
-          profilePicture: auth?.pp ?? "",
+          profilePicture: pp ?? "",
           subjects: {}
         },
         services: [
           {
             id: id,
             auth: {
-              session: auth
+              accessToken: auth.accessToken ?? "",
+              refreshToken: auth.refreshToken ?? "",
+              additionals: {
+                refreshUrl: auth.refreshURL ?? ''
+              },
             },
             serviceId: Services.SMARTSCHOOL,
             createdAt: (new Date()).toISOString(),

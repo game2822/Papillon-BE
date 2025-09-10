@@ -31,18 +31,16 @@ export class Smartschool implements SchoolServicePlugin {
   constructor(public accountId: string){}
 
   async refreshAccount(credentials: Auth): Promise<Smartschool> {
-    if (!credentials.session) {
-      error("This account seems to not be initialized")
-    }
 
     log("Refreshing Smartschool account...")
-    const refresh = (await refreshSkolengoAccount(this.accountId, credentials.session as SmartSchoolSession))
+    const refresh = (await refreshSkolengoAccount(this.accountId, credentials))
+        this.authData = refresh.auth
+        this.session = refresh.session
+    
     if (!refresh || !refresh.auth || !refresh.session) {
       throw new Error("Invalid refresh result");
     }
     log("Refresh result: " + JSON.stringify(refresh))
-    this.authData = refresh.auth
-    this.session = refresh.session
 
     if (this.session.kind === Kind.PARENT) {this.capabilities.push(Capabilities.HAVE_KIDS)}
 

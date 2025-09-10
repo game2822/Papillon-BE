@@ -30,7 +30,7 @@ import { runsIOS26 } from "@/ui/utils/IsLiquidGlass";
 import { PapillonAppearIn, PapillonAppearOut } from "@/ui/utils/Transition";
 import adjust from "@/utils/adjustColor";
 import { getCurrentPeriod } from "@/utils/grades/helper/period";
-import { warn } from "@/utils/logger/logger";
+import { log, warn } from "@/utils/logger/logger";
 import { useAccountStore } from "@/stores/account";
 import { Capabilities } from "@/services/shared/types";
 import { useNews } from "@/database/useNews";
@@ -413,6 +413,7 @@ export default function TabOneScreen() {
       <NativeHeaderSide side="Left">
         <NativeHeaderPressable
           onPress={() => {
+            log("Header button pressed");
             router.push("/(tabs)/profile/custom");
           }}
         >
