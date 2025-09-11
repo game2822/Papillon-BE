@@ -82,7 +82,7 @@
         "react-native-webview": "13.15.0",
         "react-native-worklets": "~0.5.0",
         "skolengojs": "^1.1.10",
-        "smartschooljs": "0.0.1-nightly.890cbc6",
+        "smartschooljs": "0.0.1-nightly.927e596",
         "turboself-api": "^2.1.9",
         "typescript-eslint": "^8.34.0",
         "victory-native": "^41.19.3",
@@ -2019,7 +2019,7 @@
 
     "slugify": ["slugify@1.6.6", "", {}, "sha512-h+z7HKHYXj6wJU+AnS/+IH8Uh9fdcX1Lrhg1/VMdf9PwoBQXFcXiAdsy2tSK0P6gKwJLXp02r90ahUCqHk9rrw=="],
 
-    "smartschooljs": ["smartschooljs@0.0.1-nightly.890cbc6", "", { "dependencies": { "@noble/hashes": "^1.8.0", "@scure/base": "^1.2.5", "typescript-eslint": "^8.32.1" } }, "sha512-wuNPnk2wIQyDwtKINBApE31EaGJiLi3vaa2Clgbw9X2DBuEp0IBIk4M8jTU2yRHOiq0PhD2Iik6Fx1HrOIN87w=="],
+    "smartschooljs": ["smartschooljs@0.0.1-nightly.927e596", "", { "dependencies": { "@noble/hashes": "^1.8.0", "@scure/base": "^1.2.5", "dotenv": "^17.2.2", "typescript-eslint": "^8.32.1" } }, "sha512-xdijh6oSbhniA32QXgQ4TdfBaDzDHkpvqh0oCnGOohScn3XmqAdhfSO8Ox1F3rZusPc65s4aFpByfKuK39soEA=="],
 
     "source-map": ["source-map@0.5.7", "", {}, "sha512-LbrmJOMUSdEVxIKvdcJzQC+nQhe8FUZQTXQy6+I75skNgn3OoQ0DZA8YnFa7gp8tqtL3KPf1kmo0R5DoApeSGQ=="],
 
@@ -2618,6 +2618,8 @@
     "serve-static/send": ["send@0.19.0", "", { "dependencies": { "debug": "2.6.9", "depd": "2.0.0", "destroy": "1.2.0", "encodeurl": "~1.0.2", "escape-html": "~1.0.3", "etag": "~1.8.1", "fresh": "0.5.2", "http-errors": "2.0.0", "mime": "1.6.0", "ms": "2.1.3", "on-finished": "2.4.1", "range-parser": "~1.2.1", "statuses": "2.0.1" } }, "sha512-dW41u5VfLXu8SJh5bwRmyYUbAoSB3c9uQh6L8h/KtsFREPWpbX1lrljJo186Jc4nmci/sGUZ9a0a0J2zgfq2hw=="],
 
     "simple-plist/bplist-parser": ["bplist-parser@0.3.1", "", { "dependencies": { "big-integer": "1.6.x" } }, "sha512-PyJxiNtA5T2PlLIeBot4lbp7rj4OadzjnMZD/G5zuBNt8ei/yCU7+wW0h2bag9vr8c+/WuRWmSxbqAl9hL1rBA=="],
+
+    "smartschooljs/dotenv": ["dotenv@17.2.2", "", {}, "sha512-Sf2LSQP+bOlhKWWyhFsn0UsfdK/kCWRv1iuA2gXAwt3dyNabr6QSj00I2V10pidqz69soatm9ZwZvpQMTIOd5Q=="],
 
     "source-map-support/source-map": ["source-map@0.6.1", "", {}, "sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g=="],
 

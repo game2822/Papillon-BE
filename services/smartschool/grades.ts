@@ -3,22 +3,26 @@ import { Grade as SmartSchoolGrade, Kind, SmartSchool, Subject as SmartSchoolSub
 import { error } from "@/utils/logger/logger";
 
 import { Grade, GradeScore, Period, PeriodGrades, Subject } from "../shared/grade";
+import uuid from "@/utils/uuid/uuid";
 
-export async function fetchSkolengoGradesForPeriod(session: SmartSchool, accountId: string, period: string, kid?: SmartSchool): Promise<PeriodGrades> {
+export async function afetchSkolengoGradesForPeriod(session: SmartSchool, accountId: string, period: string, kid?: SmartSchool): Promise<PeriodGrades> {
   const getGrades = async (sessionToUse: SmartSchool, kidName?: string): Promise<PeriodGrades> => {
     const subjects = await sessionToUse.GetGradesForPeriod(period)
     const studentOverall: GradeScore = {
-      value: subjects.reduce((sum, subject) => sum + subject.value, 0) / subjects.length,
+      value: 10,
       disabled: false
     }
     const classAverage: GradeScore = {
-      value: subjects.reduce((sum, subject) => sum + subject.average, 0) / subjects.length,
+      value: 10,
       disabled: false
     }
 
     return {
       createdByAccount: accountId,
-      studentOverall,
+      studentOverall:{
+        value: 10,
+        disabled: false
+      },
       classAverage,
       subjects: mapSkolengoSubjects(subjects, accountId, kidName)
     }
@@ -67,7 +71,7 @@ export async function fetchSkolengoGradePeriods(session: SmartSchool, accountId:
 
 function mapSkolengoGrades(grades: SmartSchoolGrade[], accountId: string, kidName?: string): Grade[] {
   return grades.map(grade => ({
-    id: grade.id,
+    id: uuid(),
     subjectId: grade.subject?.id ?? "",
     subjectName: grade.subject?.label ?? "",
     description: grade.topic ?? "",
@@ -87,6 +91,6 @@ function mapSkolengoSubjects(subjects: SmartSchoolSubjects[], accountId: string,
     classAverage: { value: subject.average ?? 0 },
     studentAverage: { value: subject.average ?? 0 },
     outOf: { value: subject.outOf ?? 0 },
-    grades: mapSkolengoGrades([], accountId, kidName)
+    grades: mapSkolengoGrades(subject.grades || [], accountId, kidName)
   }))
 }
