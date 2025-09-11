@@ -56,6 +56,11 @@ jobs:
       - name: 🔨 • Prebuild Android
         run: npx expo prebuild -p android --clean
 
+      - name: ⚡ • Configure Gradle Memory
+        run: |
+         echo "org.gradle.jvmargs=-Xmx4g             -Dfile.encoding=UTF-8" >> android/. gradle.properties
+    cat android/gradle.properties
+
       - name: 🏗️ • Build Android
         run: |
           cd android
