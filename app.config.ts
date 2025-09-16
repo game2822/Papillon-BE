@@ -52,7 +52,7 @@ module.exports = {
       },
       edgeToEdgeEnabled: true,
       splash: {
-        image: "./assets/images/splash.png",
+        image: "./assets/images/splash_android.png",
         resizeMode: "cover",
         backgroundColor: "#003A21",
       },
