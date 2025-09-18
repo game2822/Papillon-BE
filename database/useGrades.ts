@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import { Grade as SharedGrade, Period as SharedPeriod, PeriodGrades as SharedPeriodGrades } from "@/services/shared/grade";
 import { generateId } from "@/utils/generateId";
-import { error, warn } from "@/utils/logger/logger";
+import { error, log, warn } from "@/utils/logger/logger";
 
 import { getDatabaseInstance } from "./DatabaseProvider";
 import { mapPeriodGradesToShared,mapPeriodToShared } from "./mappers/grade";
@@ -63,6 +63,7 @@ export async function addGradesToDatabase(grades: SharedGrade[], subject: string
     const existing = await db.get('grades').query(Q.where('gradeId', id)).fetch();
 
     if(existing.length === 0) {
+
       await db.write(async () => {
         await db.get('grades').create((record: Model) => {
           const grade = record as Grade
@@ -104,7 +105,7 @@ export async function addPeriodGradesToDatabase(item: SharedPeriodGrades, period
         const periodGrade = record as PeriodGrades;
         Object.assign(periodGrade, {
           createdByAccount: item.createdByAccount,
-          studentOverallRaw: JSON.stringify(item.studentOverall),
+          studentOverallRaw: JSON.stringify({value: 10, disabled: false}),
           classAverageRaw: JSON.stringify(item.classAverage)
         });
       });
