@@ -13,7 +13,8 @@ export async function fetchSkolengoTimetable(session: SmartSchool, accountId: st
     const timetable = await sessionToUse.GetTimetable(start, end)
     for (const day of timetable) {
       const courses = mapSkolengoCourse(day.lessons, accountId);
-      const normalizedDate = new Date(day.date).toISOString().split("T")[0];
+      const datestring = new Date(day.date).toISOString().split("T")[0];
+      const normalizedDate = new Date(datestring);
 
       const existing = result.find(d => d.date === normalizedDate);
       if (existing) {

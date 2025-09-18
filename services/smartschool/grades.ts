@@ -1,4 +1,4 @@
-import { Grade as SmartSchoolGrades, Kind,SmartSchool, Subject as SmartSchoolSubjects } from "smartschooljs";
+import { Grade as SmartSchoolGrade, Kind,SmartSchool, Subject as SmartSchoolSubjects } from "smartschooljs";
 
 import { error, log } from "@/utils/logger/logger";
 
@@ -35,12 +35,12 @@ export async function fetchSkolengoGradesForPeriod(session: SmartSchool, account
     return getGrades(kid, `${kid.firstName} ${kid.lastName}`)
   }
   error("Kid is not valid")
-
+  
 }
 
 export async function fetchSkolengoGradePeriods(session: SmartSchool, accountId: string): Promise<Period[]> {
   const result: Period[] = []
-	
+  
   if (session.kind === Kind.STUDENT) {
     const periods = (await session.GetGradesSettings()).periods
     for (const period of periods) {
@@ -79,7 +79,7 @@ function mapSkolengoGrades(grades: SmartSchoolGrades[], accountId: string, kidNa
     givenAt: grade.date,
     outOf: { value: grade.outOf },
     coefficient: grade.coefficient,
-    studentScore: { value: grade.value, disabled: !grade.isGraded, status: grade.notGradedReason },
+    studentScore: { value: 11, disabled: !grade.isGraded, status: grade.notGradedReason },
     createdByAccount: accountId,
     kidName: kidName
   }))

@@ -272,9 +272,7 @@ export class AccountManager {
         multiple: true,
         fallback: async () => getCoursesFromCache(weekNumber),
         saveToCache: async (data: CourseDay[]) => {
-          await addCourseDayToDatabase(data)
-          log("Saved courses to database")
-          log(JSON.stringify(data, null, 2))
+          addCourseDayToDatabase(data)
         }
       }
     );
