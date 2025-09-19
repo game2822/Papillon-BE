@@ -1,9 +1,9 @@
+/* eslint-disable unused-imports/no-unused-imports */
 import { t } from "i18next";
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useWindowDimensions, View } from "react-native"
 import { LineGraph } from 'react-native-graph';
-import { FadeIn, FadeOut } from "react-native-reanimated";
-import Reanimated from "react-native-reanimated";
+import Reanimated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { getManager, subscribeManagerUpdate } from "@/services/shared";
 import { Grade as SharedGrade, Period, Subject as SharedSubject } from "@/services/shared/grade";
@@ -17,6 +17,7 @@ import PapillonMedian from "@/utils/grades/algorithms/median";
 import PapillonSubjectAvg from "@/utils/grades/algorithms/subject";
 import PapillonWeightedAvg from "@/utils/grades/algorithms/weighted";
 import { getCurrentPeriod } from "@/utils/grades/helper/period";
+import { error, log } from "@/utils/logger/logger";
 
 const avgAlgorithms = [
   {
@@ -88,7 +89,7 @@ const GradesWidget = (
 
       // Find the algorithm once outside the loop
       const selectedAlgorithm = avgAlgorithms.find(a => a.value === currentAlgorithm);
-      if (!selectedAlgorithm) return [];
+      if (!selectedAlgorithm) { return []; }
 
       // Iterate through the sorted grades and calculate the average progressively
       sortedGrades.forEach((currentGrade, index) => {
@@ -137,8 +138,8 @@ const GradesWidget = (
         setPeriods(result);
         const currentPeriodFound = getCurrentPeriod(result);
         setCurrentPeriod(currentPeriodFound);
-      } catch (error) {
-        console.error("Failed to fetch periods:", error);
+      } catch (err) {
+        error(`Failed to fetch periods: ${err}`);
       }
     }, [period, currentPeriod, manager]);
 
@@ -159,8 +160,8 @@ const GradesWidget = (
           if (grades.studentOverall.value) {
             setServiceAverage(grades.studentOverall.value)
           }
-        } catch (error) {
-          console.error("Failed to fetch grades:", error);
+        } catch (err) {
+          error(`Failed to fetch grades: ${err}`);
         }
       }
     }, [manager]);
@@ -314,8 +315,8 @@ const GradesWidget = (
         </View>
       </View>
     )
-  } catch (error) {
-    console.error("Error in GradesWidget:", error);
+  } catch (err) {
+    error(`Error in GradesWidget: ${err}`);
     return null;
   }
 }
