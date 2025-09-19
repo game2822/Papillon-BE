@@ -58,10 +58,10 @@ export default function WebViewScreen() {
           {
             id: id,
             auth: {
-              accessToken: auth.accessToken ?? "",
+              accessToken: auth.refreshToken ?? "",
               refreshToken: auth.refreshToken ?? "",
               additionals: {
-                refreshUrl: auth.refreshURL ?? ''
+                refreshUrl: InstanceURL ?? ''
               },
             },
             serviceId: Services.SMARTSCHOOL,
