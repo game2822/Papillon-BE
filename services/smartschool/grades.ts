@@ -1,37 +1,25 @@
-import { Grade as SmartSchoolGrade, Kind,SmartSchool, Subject as SmartSchoolSubjects } from "smartschooljs";
+import { Grade as SkolengoGrade, Kind,SmartSchool, Subject as SkolengoSubjects } from "smartschooljs";
 
-import { error, log } from "@/utils/logger/logger";
+import { error } from "@/utils/logger/logger";
 
-import { Grade, GradeScore, Period, PeriodGrades, Subject } from "../shared/grade";
+import { Grade, Period, PeriodGrades, Subject } from "../shared/grade";
 
 export async function fetchSkolengoGradesForPeriod(session: SmartSchool, accountId: string, period: string, kid?: SmartSchool): Promise<PeriodGrades> {
   const getGrades = async (sessionToUse: SmartSchool, kidName?: string): Promise<PeriodGrades> => {
     const subjects = await sessionToUse.GetGradesForPeriod(period)
-    log("Fetched subjects: " + JSON.stringify(subjects))
-    const studentOverall: GradeScore = {
-      value: subjects.reduce((sum, subject) => sum + subject.value, 0) / subjects.length,
-      disabled: false
-    }
-    log("Calculated student overall: " + JSON.stringify(studentOverall))
-    const classAverage: GradeScore = {
-      value: subjects.reduce((sum, subject) => sum + subject.average, 0) / subjects.length,
-      disabled: false
-    }
-    log("Calculated class average: " + JSON.stringify(classAverage))
+ 
 
     return {
       createdByAccount: accountId,
-      studentOverall,
-      classAverage,
-      subjects: mapSkolengoSubjects(subjects, accountId, kidName)
+      classAverage: { value: 16.66, disabled: true },
+      studentOverall: { value: 16.66, disabled: true },
+      subjects: mapSkolengoSubjects(subjects, accountId, kidName).filter(subject => subject.grades.length > 0)
     }
   }
   if (session.kind === Kind.STUDENT) {
-    log("Fetching grades for student session")
     return getGrades(session)
-  }
+  } 
   if (kid) {
-    log("Fetching grades for kid: " + kid.firstName + " " + kid.lastName)
     return getGrades(kid, `${kid.firstName} ${kid.lastName}`)
   }
   error("Kid is not valid")
@@ -70,28 +58,28 @@ export async function fetchSkolengoGradePeriods(session: SmartSchool, accountId:
   return result
 }
 
-function mapSkolengoGrades(grades: SmartSchoolGrades[], accountId: string, kidName?: string): Grade[] {
+function mapSkolengoGrades(grades: SkolengoGrade[], accountId: string, kidName?: string): Grade[] {
   return grades.map(grade => ({
     id: grade.id,
     subjectId: grade.subject?.id ?? "",
     subjectName: grade.subject?.label ?? "",
-    description: grade.title ?? "",
+    description: grade.topic ?? "",
     givenAt: grade.date,
     outOf: { value: grade.outOf },
     coefficient: grade.coefficient,
-    studentScore: { value: 11, disabled: !grade.isGraded, status: grade.notGradedReason },
+    studentScore: { value: grade.value, disabled: grade.isGraded, status: grade.notGradedReason },
     createdByAccount: accountId,
     kidName: kidName
   }))
 }
 
-function mapSkolengoSubjects(subjects: SmartSchoolSubjects[], accountId: string, kidName?: string): Subject[] {
+function mapSkolengoSubjects(subjects: SkolengoSubjects[], accountId: string, kidName?: string): Subject[] {
   return subjects.map(subject => ({
     id: subject.id,
     name: subject.name,
-    classAverage: { value: subject.average },
-    studentAverage: { value: subject.value },
-    outOf: { value: subject.outOf },
-    grades: mapSkolengoGrades(subject.grades ?? [], accountId, kidName)
+    classAverage: { value: subject.average, disabled: true },
+    studentAverage: { value: subject.value, disabled: true },
+    outOf: { value: subject.outOf, disabled: true },
+    grades: mapSkolengoGrades(subject.grades, accountId, kidName)
   }))
 }

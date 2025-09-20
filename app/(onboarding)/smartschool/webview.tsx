@@ -61,7 +61,7 @@ export default function WebViewScreen() {
               accessToken: auth.refreshToken ?? "",
               refreshToken: auth.refreshToken ?? "",
               additionals: {
-                refreshUrl: InstanceURL ?? ''
+                refreshUrl: auth.refreshURL ?? ''
               },
             },
             serviceId: Services.SMARTSCHOOL,

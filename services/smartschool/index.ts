@@ -72,16 +72,16 @@ export class Smartschool implements SchoolServicePlugin {
   }
 
   async getGradesForPeriod(period: Period, kid?: Kid): Promise<PeriodGrades> {
-    if (kid?.ref && this.session) {
-      return fetchSkolengoGradesForPeriod(this.session, this.accountId, period.id!)
+      if (kid?.ref && this.session) {
+        return fetchSkolengoGradesForPeriod(this.session, this.accountId, period.id!)
+      }
+      
+      if (this.session && this.session.kind === Kind.STUDENT ) {
+        return fetchSkolengoGradesForPeriod(this.session, this.accountId, period.id!);
+      }
+      
+      error("Session is not valid", "Skolengo.getGradesForPeriod")
     }
-        
-    if (this.session && this.session.kind === Kind.STUDENT ) {
-      return fetchSkolengoGradesForPeriod(this.session, this.accountId, period.id!);
-    }
-        
-    error("Session is not valid", "Skolengo.getGradesForPeriod")
-  }
 
   async getGradesPeriods(): Promise<Period[]> {
     if (this.session) {
@@ -91,13 +91,13 @@ export class Smartschool implements SchoolServicePlugin {
     error("Session is not valid", "Skolengo.getGradesPeriods")
   }
 
-  async getAttendanceForPeriod(): Promise<Attendance> {
+  /*async getAttendanceForPeriod(): Promise<Attendance> {
     if (this.session) {
       return fetchSkolengoAttendance(this.session, this.accountId);
     }
 
     error ("Session is not valid", "Skolengo.getAttendanceForPeriod")
-  }
+  }*/
 
   async getWeeklyTimetable(weekNumber: number): Promise<CourseDay[]> {
     if (this.session) {
