@@ -1,7 +1,6 @@
 import { Kind, Lesson, SmartSchool } from "smartschooljs";
 
 import { getDateRangeOfWeek } from "@/database/useHomework";
-import { info } from "@/utils/logger/logger";
 
 import { Course, CourseDay, CourseStatus, CourseType } from "../shared/timetable";
 
@@ -9,37 +8,25 @@ export async function fetchSkolengoTimetable(session: SmartSchool, accountId: st
   const { start, end } = getDateRangeOfWeek(weekNumber)
   const result: CourseDay[] = []
 
-  const getTimetable = async (sessionToUse: SmartSchool) => {
+  const getTimetable = async (sessionToUse: SmartSchool, kidName?: string) => {
     const timetable = await sessionToUse.GetTimetable(start, end)
-    for (const day of timetable) {
-      const courses = mapSkolengoCourse(day.lessons, accountId);
-      const datestring = new Date(day.date).toISOString().split("T")[0];
-      const normalizedDate = new Date(datestring);
-
-      const existing = result.find(d => d.date === normalizedDate);
-      if (existing) {
-        existing.courses.push(...courses);
-      } else {
-        result.push({ date: normalizedDate, courses });
-      }
-    }
+    result.push(...timetable.map(day => ({
+      date: day.date,
+      courses: mapSkolengoCourse(day.lessons, accountId, kidName)
+    })))
   }
 
   if (session.kind === Kind.STUDENT) {
     await getTimetable(session)
   } else {
     for (const kid of (session.kids ?? [])) {
-      await getTimetable(kid)
+      await getTimetable(kid, `${kid.firstName} ${kid.firstName}`)
     }
-  }
-  for (const day of result) {
-    day.courses.sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime());
   }
   return result;
 }
 
-function mapSkolengoCourse(data: Lesson[], accountId: string): Course[] {
-  info("Mapping courses: " + JSON.stringify(data))
+function mapSkolengoCourse(data: Lesson[], accountId: string, kidName?: string): Course[] {
   return data.map(lesson => ({
     subject: lesson.subject.label,
     id: lesson.id,
@@ -47,9 +34,10 @@ function mapSkolengoCourse(data: Lesson[], accountId: string): Course[] {
     from: lesson.startDateTime,
     to: lesson.endDateTime,
     room: lesson.room,
-    teacher: lesson.teacher.map(t => `${t.name}`).join(", "),
+    teacher: lesson.teacher.map(t => t.name).join(", "),
     backgroundColor: lesson.subject.color,
     status: lesson.canceled ? CourseStatus.CANCELED : undefined,
-    createdByAccount: accountId
+    createdByAccount: accountId,
+    kidName: kidName
   }))
 }
