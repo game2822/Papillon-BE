@@ -100,14 +100,12 @@ export class Smartschool implements SchoolServicePlugin {
   }*/
 
   async getWeeklyTimetable(weekNumber: number): Promise<CourseDay[]> {
-    if (this.session) {
-      const timetable = await fetchSkolengoTimetable(this.session, this.accountId, weekNumber)
-      log("Fetched timetable: " + JSON.stringify(timetable))
-      return timetable
+      if (this.session) {
+        return fetchSkolengoTimetable(this.session, this.accountId, weekNumber)
+      }
+      
+      error("Session is not valid", "Skolengo.getWeeklyTimetable")
     }
-        
-    error("Session is not valid", "Skolengo.getWeeklyTimetable")
-  }
 
   async getChats(): Promise<Chat[]> {
     if (this.session) {
