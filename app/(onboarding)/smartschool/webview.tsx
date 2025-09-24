@@ -35,7 +35,7 @@ export default function WebViewScreen() {
 
       if (!code) return false;
       log("Authorization code received:", code[1].toString());
-      const auth = await finalizeLogin(InstanceURL, code[1], Device.osName ?? "", Device.deviceName ?? "", deviceUUID)
+      const auth = await finalizeLogin(InstanceURL, code[1], Device.osName ?? "", `Papillon sur ${Device.deviceName ?? ""}`, deviceUUID)
       log("Auth!!!!!!!!")
       console.log("Auth Data:", auth.toString());
       const store = useAccountStore.getState();

@@ -15,14 +15,8 @@ export async function fetchSkolengoTimetable(session: SmartSchool, accountId: st
       courses: mapSkolengoCourse(day.lessons, accountId, kidName)
     })))
   }
+  await getTimetable(session)
 
-  if (session.kind === Kind.STUDENT) {
-    await getTimetable(session)
-  } else {
-    for (const kid of (session.kids ?? [])) {
-      await getTimetable(kid, `${kid.firstName} ${kid.firstName}`)
-    }
-  }
   return result;
 }
 
