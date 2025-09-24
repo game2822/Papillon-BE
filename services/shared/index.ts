@@ -10,7 +10,7 @@ import { addKidToDatabase, getKidsFromCache } from "@/database/useKids";
 import { addNewsToDatabase, getNewsFromCache } from "@/database/useNews";
 import { addCourseDayToDatabase, getCoursesFromCache } from "@/database/useTimetable";
 import { Attendance } from "@/services/shared/attendance";
-import { Booking, BookingDay, CanteenHistoryItem, CanteenMenu, QRCode } from "@/services/shared/canteen";
+import { Booking, BookingDay, CanteenHistoryItem, CanteenKind, CanteenMenu, QRCode } from "@/services/shared/canteen";
 import { Chat, Message, Recipient } from "@/services/shared/chat";
 import { Period, PeriodGrades } from "@/services/shared/grade";
 import { Homework } from "@/services/shared/homework";
@@ -32,6 +32,10 @@ export class AccountManager {
   private clients: Record<string, SchoolServicePlugin> = {};
 
   constructor(readonly account: Account) {}
+
+  removeService(id: string): void {
+    delete this.clients[id];
+  }
 
   getAccount(): Account {
     return this.account
@@ -77,6 +81,18 @@ export class AccountManager {
     return refreshedAtLeastOne;
   }
 
+  async getCanteenKind(clientId: string): Promise<CanteenKind> {
+    return await this.fetchData(
+      Capabilities.CANTEEN_BALANCE,
+      async client =>
+        client.getCanteenKind ? client.getCanteenKind() : CanteenKind.ARGENT,
+      {
+        multiple: false,
+        clientId
+      }
+    );
+  }
+
   async getKids(): Promise<Kid[]> {
     return await this.fetchData(
       Capabilities.HAVE_KIDS,
@@ -120,7 +136,6 @@ export class AccountManager {
       }
     );
   }
-
 
   async getGradesForPeriod(period: Period, clientId: string, kid?: Kid): Promise<PeriodGrades> {
     return await this.fetchData(

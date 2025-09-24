@@ -1,6 +1,9 @@
+import { Identification } from "ezly";
 import { Session } from "pawdirecte";
 import { SessionHandle } from "pawnote";
+import { Client as ArdClient } from "pawrd";
 import { Skolengo as SkolengoSession } from "skolengojs";
+import { Client as TurboselfClient } from "turboself-api";
 import { SmartSchool as SmartSchoolSession } from "smartschooljs";
 
 import { Pronote } from "@/services/pronote";
@@ -9,6 +12,7 @@ import {
   Booking,
   BookingDay,
   CanteenHistoryItem,
+  CanteenKind,
   CanteenMenu,
   QRCode,
 } from "@/services/shared/canteen";
@@ -19,17 +23,14 @@ import { News } from "@/services/shared/news";
 import { Course, CourseDay, CourseResource } from "@/services/shared/timetable";
 import { Auth, Services } from "@/stores/account/types";
 
+import { ARD } from "../ard";
 import { EcoleDirecte } from "../ecoledirecte";
+import { Izly } from "../izly";
 import { Skolengo } from "../skolengo";
 import { Smartschool } from "../smartschool";
-import { Kid } from "./kid";
-import { Client as TurboselfClient } from "turboself-api";
-import { Client as ArdClient } from "pawrd";
 import { TurboSelf } from "../turboself";
-import { ARD } from "../ard";
 import { Balance } from "./balance";
-import { Izly } from "../izly";
-import { Identification } from "ezly";
+import { Kid } from "./kid";
 
 /** Represents a plugin for a school service.
  *
@@ -56,6 +57,7 @@ export interface SchoolServicePlugin {
     credentials: Auth
   ) => Promise<Pronote | Skolengo | Smartschool | EcoleDirecte | TurboSelf | ARD | Izly>;
   getKids?: () => Kid[];
+  getCanteenKind?: () => CanteenKind;
   getHomeworks?: (weekNumber: number) => Promise<Homework[]>;
   getNews?: () => Promise<News[]>;
   getGradesForPeriod?: (period: Period, kid?: Kid) => Promise<PeriodGrades>;
