@@ -48,7 +48,7 @@ export default function WebViewScreen() {
         id,
         firstName: auth?.firstName ?? "",
         lastName: auth?.lastName ?? "",
-        schoolName: "schoolName",
+        schoolName: undefined,
         className: auth?.className,
         customisation: {
           profilePicture: pp ?? "",
@@ -61,7 +61,8 @@ export default function WebViewScreen() {
               accessToken: auth.refreshToken ?? "",
               refreshToken: auth.refreshToken ?? "",
               additionals: {
-                refreshUrl: auth.refreshURL ?? ''
+                refreshUrl: auth.refreshURL ?? '',
+                SmscMobileId: id,
               },
             },
             serviceId: Services.SMARTSCHOOL,

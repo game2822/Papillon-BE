@@ -13,16 +13,18 @@ export async function refreshSkolengoAccount(
     throw new Error("No refresh token available");
   }
   const refreshUrl: string = String(credentials.additionals?.["refreshUrl"] || "");
+  const SMSCMobileID: string = String(credentials.additionals?.["SmscMobileId"] || "");
   if (!refreshUrl) {
     error("No refresh URL available", "refreshSkolengoAccount");
   }
-  const session = await LoginWithToken(refreshUrl, credentials.refreshToken, device.osName ?? "", device.deviceName ?? "", device.modelId ?? "");
+  const session = await LoginWithToken(refreshUrl, credentials.refreshToken, SMSCMobileID);
 
    const authData: Auth = {
     accessToken: session.refreshToken,
     refreshToken: session.refreshToken,
     additionals: {
       refreshUrl: session.refreshURL,
+      SmscMobileId: SMSCMobileID,
     }
   }
   useAccountStore.getState().updateServiceAuthData(accountId, authData)
