@@ -1,9 +1,9 @@
-import { Skolengo } from "skolengojs";
+import { SmartSchool } from "smartschooljs";
 
 import { AttachmentType } from "../shared/attachment";
 import { News } from "../shared/news";
 
-export async function fetchSkolengoNews(session: Skolengo, accountId: string): Promise<News[]> {
+export async function fetchSkolengoNews(session: SmartSchool, accountId: string): Promise<News[]> {
   const news = await session.GetNews()
   return news.map(item => ({
     id: item.id,
@@ -25,7 +25,6 @@ export async function fetchSkolengoNews(session: Skolengo, accountId: string): P
       url: item.linkedWebSiteUrl ?? "",
       createdByAccount: accountId
     }].filter(attachment => attachment.name && attachment.url),
-    ref: item,
     createdByAccount: accountId
   }));
 }
