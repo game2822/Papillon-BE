@@ -49,6 +49,7 @@ module.exports = {
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#ffffff",
+        monochromeImage: "./assets/images/monochrome-icon.png",
       },
       edgeToEdgeEnabled: true,
       splash: {
