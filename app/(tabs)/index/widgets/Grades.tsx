@@ -18,6 +18,7 @@ import PapillonSubjectAvg from "@/utils/grades/algorithms/subject";
 import PapillonWeightedAvg from "@/utils/grades/algorithms/weighted";
 import { getCurrentPeriod } from "@/utils/grades/helper/period";
 import { error, log } from "@/utils/logger/logger";
+import i18n from "@/utils/i18n";
 
 const avgAlgorithms = [
   {
@@ -247,6 +248,7 @@ const GradesWidget = (
         style={{
           width: "100%",
           height: "100%",
+          marginTop: header ? -20 : 0,
         }}
       >
         <View
@@ -298,7 +300,7 @@ const GradesWidget = (
           <View
             style={{
               padding: 28,
-              marginTop: (-32 * 2) + (header ? -16 : 0),
+              marginTop: (-32 * 2) + (header ? -4 : 0),
               paddingLeft: 36
             }}
           >
@@ -314,15 +316,15 @@ const GradesWidget = (
                 </Typography>
               </Dynamic>
             </Stack>
-            <Dynamic animated entering={Animation(FadeIn, "default").duration(100)} exiting={Animation(FadeOut, "default").duration(100)} key={`currentAlgorithm:${currentAlgorithm}`} style={{ width: "100%" }}>
+            <Dynamic animated entering={Animation(FadeIn, "default").duration(100)} exiting={Animation(FadeOut, "default").duration(100)} key={`currentAlgorithm:${selectedAlgorithm?.label}`} style={{ width: "100%" }}>
               <Typography variant="title" color={accent} align={header ? "center" : "left"} style={{ width: "100%" }}>
                 {selectedAlgorithm?.label || t("NoAverage")}
               </Typography>
             </Dynamic>
-            <Dynamic animated entering={Animation(FadeIn, "default").duration(100)} exiting={Animation(FadeOut, "default").duration(100)} key={`selectionDate:${selectionDate?.getTime()}:${currentAlgorithm}`} style={{ width: "100%" }}>
+            <Dynamic animated entering={Animation(FadeIn, "default").duration(100)} exiting={Animation(FadeOut, "default").duration(100)} key={`selectionDate:${selectionDate?.getTime()}:${selectedAlgorithm?.label}`} style={{ width: "100%" }}>
               <Typography variant="body1" color="secondary" align={header ? "center" : "left"} inline style={{ marginTop: 3, width: "100%" }}>
                 {selectionDate ?
-                  t("Global_DatePrefix") + " " + selectionDate.toLocaleDateString("fr-FR", {
+                  t("Global_DatePrefix") + " " + selectionDate.toLocaleDateString(i18n.language, {
                     day: "2-digit",
                     month: "long",
                     year: "numeric",

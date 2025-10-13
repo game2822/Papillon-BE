@@ -44,6 +44,7 @@ import { getSubjectName } from "@/utils/subjects/name";
 
 import { getStatusText } from "../calendar";
 import GradesWidget from "./widgets/Grades";
+import i18n from "@/utils/i18n";
 
 const IndexScreen = () => {
   const now = new Date();
@@ -320,7 +321,7 @@ const IndexScreen = () => {
         gap={2}
         padding={20}
       >
-        <Typography variant="h1" style={{ marginBottom: 2, fontSize: 44, lineHeight: 56 }}>
+        <Typography variant="h1" style={{ marginTop: -12, marginBottom: 2, fontSize: 44, lineHeight: 56 }}>
           👋
         </Typography>
         <Dynamic animated key={"welcome:" + firstName}>
@@ -460,12 +461,6 @@ const IndexScreen = () => {
         }
         gap={12}
         data={[
-          {
-            icon: <Papicons name={"Butterfly"} />,
-            title: "Papillon 8 est là !",
-            redirect: "/changelog",
-            buttonLabel: "En savoir plus"
-          },
           courses.filter(item => item.to.getTime() > Date.now()).length > 0 && {
             icon: <Papicons name={"Calendar"} />,
             title: t("Home_Widget_NextCourses"),
@@ -663,13 +658,13 @@ const IndexScreen = () => {
 
       <NativeHeaderTitle style={{ flexDirection: "row", alignItems: "center", gap: 4 }} ignoreTouch={true}>
         <Typography variant="navigation" color={foreground}>
-          {date.toLocaleDateString("fr-FR", { weekday: "long" })}
+          {date.toLocaleDateString(i18n.language, { weekday: "long" })}
         </Typography>
         <NativeHeaderHighlight color={foreground} style={{ marginBottom: 0 }}>
-          {date.toLocaleDateString("fr-FR", { day: "numeric" })}
+          {date.toLocaleDateString(i18n.language, { day: "numeric" })}
         </NativeHeaderHighlight>
         <Typography variant="navigation" color={foreground}>
-          {date.toLocaleDateString("fr-FR", { month: "long" })}
+          {date.toLocaleDateString(i18n.language, { month: "long" })}
         </Typography>
       </NativeHeaderTitle>
 
