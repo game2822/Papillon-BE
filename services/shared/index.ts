@@ -594,6 +594,12 @@ export class AccountManager {
       return new module.Skolengo(service.id);
     }
 
+    if (service.serviceId === Services.SMARTSCHOOL) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const module = require("@/services/smartschool/index");
+      return new module.Smartschool(service.id);
+    }
+
     if (service.serviceId === Services.ECOLEDIRECTE) {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const module = require("@/services/ecoledirecte/index");
