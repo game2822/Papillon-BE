@@ -6,17 +6,17 @@ import { Stack } from '@/utils/native/AnimatedNavigator';
 import { screenOptions } from "@/utils/theme/ScreenOptions";
 
 export default function OnboardingLayout() {
-  const newScreenOptions = React.useMemo(() => ({
-    ...screenOptions,
-    headerShown: false,
-    headerBackVisible: true,
-    headerTitle: '',
-    gestureEnabled: false,
-    headerTransparent: true,
-    headerTintColor: "#FFFFFF",
-    headerBackButtonDisplayMode: "minimal",
-    headerBackButtonMenuEnabled: false
-  }), []);
+    const newScreenOptions = React.useMemo(() => ({
+        ...screenOptions,
+        headerShown: false,
+        headerBackVisible: true,
+        headerTitle: '',
+        gestureEnabled: false,
+        headerTransparent: true,
+        headerTintColor: "#FFFFFF",
+        headerBackButtonDisplayMode: "minimal",
+        headerBackButtonMenuEnabled: false
+    }), []);
 
     return (
         <View style={{ flex: 1, backgroundColor: "black" }}>
@@ -119,6 +119,21 @@ export default function OnboardingLayout() {
                     name="skolengo/webview"
                     options={{ ...newScreenOptions }}
                     initialParams={{ ref: {} }}
+                />
+                <Stack.Screen
+                    name="university/appscho/list"
+                    options={{ ...newScreenOptions }}
+                    initialParams={{ url: "", previousPage: "map" }}
+                />
+                <Stack.Screen
+                    name="university/appscho/webview"
+                    options={{ ...newScreenOptions }}
+                    initialParams={{ instanceId: "" }}
+                />
+                <Stack.Screen
+                    name="university/appscho/credentials"
+                    options={{ ...newScreenOptions }}
+                    initialParams={{ instanceId: "" }}
                 />
                 <Stack.Screen
                     name="smartschool/url"

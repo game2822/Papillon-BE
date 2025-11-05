@@ -105,7 +105,8 @@ export interface SupportedUniversity {
   name: string;
   title: string;
   hasLimitedSupport: boolean;
-  image: any;
+  image?: any;
+  icon?: any;
   type: string;
   onPress: () => void;
 }
@@ -143,6 +144,13 @@ export function GetSupportedUniversities(redirect: (path: { pathname: string }) 
       onPress: () => {
         redirect({ pathname: './multi/credentials', options: { color: "#008DB0", university: "UPHF", url: "https://appmob.uphf.fr/backend" } });
       },
+    },
+    {
+      name: "appscho",
+      title: "Autres universités",
+      hasLimitedSupport: false,
+      type: "other",
+      onPress: () => { redirect({ pathname: './appscho/list' }) }
     },
     /*{
       name: "iut-lannion",
