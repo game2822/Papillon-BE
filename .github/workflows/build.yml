@@ -9,11 +9,11 @@ on:
       build_ios:
         description: 'Build iOS IPA'
         type: boolean
-        default: true
+        default: false
       sign_android:
         description: 'Sign Android APK'
         type: boolean
-        default: false
+        default: true
       sign_ios:
         description: 'Sign iOS IPA'
         type: boolean
@@ -37,22 +37,22 @@ jobs:
     if: ${{ inputs.build_android }}
     steps:
       - uses: actions/checkout@v4
-     
+
       - name: 📀 • Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          
+
       - name: ☕ • Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-          
+
       - name: 🗂️ • Install Node Dependencies
-        run: npm ci --legacy-peer-deps
-        
+        run: npm ci
+
       - name: 🔨 • Prebuild Android
         run: npx expo prebuild -p android --clean
 
@@ -136,16 +136,16 @@ jobs:
     if: ${{ inputs.build_ios }}
     steps:
       - uses: actions/checkout@v4
-     
+
       - name: 📀 • Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          
+
       - name: 🗂️ • Install Node Dependencies
         run: npm ci --legacy-peer-deps
-        
+
       - name: 🔨 • Prebuild iOS
         run: npx expo prebuild -p ios --clean
 
