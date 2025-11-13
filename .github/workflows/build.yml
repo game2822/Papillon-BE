@@ -9,11 +9,11 @@ on:
       build_ios:
         description: 'Build iOS IPA'
         type: boolean
-        default: true
+        default: false
       sign_android:
         description: 'Sign Android APK'
         type: boolean
-        default: false
+        default: true
       sign_ios:
         description: 'Sign iOS IPA'
         type: boolean
