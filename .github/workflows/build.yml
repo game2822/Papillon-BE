@@ -51,7 +51,7 @@ jobs:
           java-version: '17'
 
       - name: 🗂️ • Install Node Dependencies
-        run: npm ci
+        run: npm i
 
       - name: 🔨 • Prebuild Android
         run: npx expo prebuild -p android --clean
