@@ -1,26 +1,30 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { Papicons } from '@getpapillon/papicons';
 import { useTheme } from '@react-navigation/native';
 import { RelativePathString, UnknownInputParams } from 'expo-router';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { StyleProp, ViewStyle } from 'react-native';
 
 import { Services } from '@/stores/account/types';
-
+import { useAlert } from '@/ui/components/AlertProvider';
 export interface SupportedService {
   name: string;
   title: string;
   type: string;
-  image?: any;
+  image?: NodeRequire;
   onPress: () => void;
   variant: string;
   color?: string;
   icon?: React.ReactNode;
-  style?: { [key: string]: any }
+  style?: StyleProp<ViewStyle>;
 }
 
 export function GetSupportedServices(redirect: (path: { pathname: string, options?: UnknownInputParams }) => void): SupportedService[] {
   const theme = useTheme();
   const { colors } = theme;
   const { t } = useTranslation()
+  const alert = useAlert();
 
   return [
     {
@@ -40,7 +44,14 @@ export function GetSupportedServices(redirect: (path: { pathname: string, option
       type: "main",
       image: require("@/assets/images/service_ed.png"),
       onPress: () => {
-        redirect({ pathname: './ecoledirecte/credentials', options: { service: Services.ECOLEDIRECTE } });
+        alert.showAlert({
+          title: "Service en maintenance",
+          description: "Suite à des changements récents de la part d'EcoleDirecte, ce service est momentanément indisponible.",
+          icon: "TriangleAlert",
+          color: "#D60046",
+          withoutNavbar: true
+        })
+        //redirect({ pathname: './ecoledirecte/credentials', options: { service: Services.ECOLEDIRECTE } });
       },
       variant: 'service' as const,
       color: 'light' as const,
@@ -72,7 +83,7 @@ export function GetSupportedServices(redirect: (path: { pathname: string, option
       title: "separator",
       type: "separator",
       image: require("@/assets/images/service_skolengo.png"),
-      onPress: () => { },
+      onPress: () => { /* empty */ },
       variant: 'service' as const,
       color: 'light' as const,
     },
@@ -105,13 +116,12 @@ export interface SupportedUniversity {
   name: string;
   title: string;
   hasLimitedSupport: boolean;
-  image?: any;
-  icon?: any;
+  image?: NodeRequire;
   type: string;
   onPress: () => void;
 }
 
-export function GetSupportedUniversities(redirect: (path: { pathname: string }) => void): SupportedUniversity[] {
+export function GetSupportedUniversities(redirect: (path: { pathname: string, options?: UnknownInputParams }) => void): SupportedUniversity[] {
   const { t } = useTranslation();
 
   return [

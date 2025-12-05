@@ -10,7 +10,7 @@ module.exports = {
     version: PackageJSON.version,
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: "papillon",
+    scheme: ["papillon", "izly", "skoapp-prod"],
     platforms: ["ios", "android"],
     "extra": {
         "eas": {
@@ -105,6 +105,9 @@ module.exports = {
       [
         "expo-build-properties",
         {
+          android: {
+            enable16KbPageSizes: true,
+          },
           ios: {
             extraPods: [
               { name: "SDWebImage", modular_headers: true },
