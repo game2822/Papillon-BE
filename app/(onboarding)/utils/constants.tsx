@@ -156,21 +156,24 @@ export function GetSupportedUniversities(redirect: (path: { pathname: string, op
       },
     },
     {
+      name: "iut-lannion",
+      title: "IUT de Lannion",
+      hasLimitedSupport: false,
+      image: require("@/assets/images/univ_lannion.png"),
+      type: "main",
+      onPress: () => {
+        redirect({ pathname: './lannion/credentials' });
+      },
+    },
+    {
       name: "appscho",
       title: "Autres universités",
       hasLimitedSupport: false,
       type: "other",
       onPress: () => { redirect({ pathname: './appscho/list' }) }
     },
+
     /*{
-      name: "iut-lannion",
-      title: "IUT de Lannion",
-      hasLimitedSupport: false,
-      image: require("@/assets/images/univ_lannion.png"),
-      type: "main",
-      onPress: () => { }
-    },
-    {
       name: "limited-functions",
       title: t("Feature_Limited"),
       hasLimitedSupport: true,
@@ -209,7 +212,7 @@ export function GetSupportedUniversities(redirect: (path: { pathname: string, op
       image: require("@/assets/images/univ_paris_sorbonne.png"),
       type: "main",
       onPress: () => { }
-    }*/
+    } */
   ]
 }
 
