@@ -1,6 +1,7 @@
 import { Model, Q } from "@nozbe/watermelondb";
 import { useEffect, useState } from "react";
 
+import { getICalEventsForWeek } from "@/services/local/ical";
 import { Course as SharedCourse,CourseDay as SharedCourseDay } from "@/services/shared/timetable"
 import { generateId } from "@/utils/generateId";
 import { warn } from "@/utils/logger/logger";
@@ -10,9 +11,8 @@ import { mapCourseToShared } from "./mappers/course";
 import Course from "./models/Timetable";
 import { getDateRangeOfWeek } from "./useHomework";
 import { safeWrite } from "./utils/safeTransaction";
-import { getICalEventsForWeek } from "@/services/local/ical";
 
-export function useTimetable(refresh = 0, weekNumber: number | number[] = 0) {
+export function useTimetable(refresh = 0, weekNumber: number | number[] = 0, date: Date = new Date()) {
   const database = useDatabase();
   const [timetable, setTimetable] = useState<SharedCourseDay[]>([]);
 
@@ -22,23 +22,23 @@ export function useTimetable(refresh = 0, weekNumber: number | number[] = 0) {
 
   useEffect(() => {
     const fetchTimetable = async () => {
-      const timetableFetched = await getCoursesFromCache(weeks);
+      const timetableFetched = await getCoursesFromCache(weeks, date.getFullYear());
       setTimetable(timetableFetched);
     };
     fetchTimetable();
-  }, [refresh, database, weeksKey]);
+  }, [refresh, database, weeksKey, date.getFullYear()]);
 
   useEffect(() => {
     const icalQuery = database.get('icals').query();
     const subscription = icalQuery.observe().subscribe(() => {
       const fetchTimetable = async () => {
-        const timetableFetched = await getCoursesFromCache(weeks);
+        const timetableFetched = await getCoursesFromCache(weeks, date.getFullYear());
         setTimetable(timetableFetched);
       };
       fetchTimetable();
     });
     return () => subscription.unsubscribe();
-  }, [database, weeksKey]);
+  }, [database, weeksKey, date.getFullYear()]);
 
   return timetable;
 }
@@ -86,8 +86,10 @@ export async function addCourseDayToDatabase(courses: SharedCourseDay[]) {
             .query(Q.where('courseId', id))
             .fetch();
 
-          for (const oldRecord of oldExistingRecords) {
-            await oldRecord.markAsDeleted();
+          if (oldId !== id) {
+            for (const oldRecord of oldExistingRecords) {
+              await oldRecord.markAsDeleted();
+            }
           }
 
           if (existingRecords.length === 0) {
@@ -140,7 +142,7 @@ export async function addCourseDayToDatabase(courses: SharedCourseDay[]) {
   );
 }
 
-export async function getCoursesFromCache(weeks: number[]): Promise<SharedCourseDay[]> {
+export async function getCoursesFromCache(weeks: number[], year: number): Promise<SharedCourseDay[]> {
   try {
     const database = getDatabaseInstance();
     
@@ -148,9 +150,9 @@ export async function getCoursesFromCache(weeks: number[]): Promise<SharedCourse
     let maxEnd = new Date(-8640000000000000);
     
     for (const w of weeks) {
-      const { start, end } = getDateRangeOfWeek(w);
-      if (start < minStart) minStart = start;
-      if (end > maxEnd) maxEnd = end;
+      const { start, end } = getDateRangeOfWeek(w, year);
+      if (start < minStart) {minStart = start;}
+      if (end > maxEnd) {maxEnd = end;}
     }
 
     const courses = await database

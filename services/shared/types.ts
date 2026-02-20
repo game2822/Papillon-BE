@@ -1,7 +1,7 @@
+import { Client } from "@blockshub/blocksdirecte";
 import { User } from "appscho";
 import { Multi as MultiClient } from "esup-multi.js";
 import { Identification } from "ezly";
-import { Session } from "pawdirecte";
 import { SessionHandle } from "pawnote";
 import { Client as ArdClient } from "pawrd";
 import { Skolengo as SkolengoSession } from "skolengojs";
@@ -54,7 +54,7 @@ export interface SchoolServicePlugin {
     | MultiClient
     | SessionHandle
     | SkolengoSession
-    | Session
+    | Client
     | TurboselfClient
     | User
     | LannionClient
@@ -77,7 +77,7 @@ export interface SchoolServicePlugin {
   getChatMessages?: (chat: Chat) => Promise<Message[]>;
   getRecipientsAvailableForNewChat?: () => Promise<Recipient[]>;
   getCourseResources?: (course: Course) => Promise<CourseResource[]>;
-  getWeeklyTimetable?: (weekNumber: number) => Promise<CourseDay[]>;
+  getWeeklyTimetable?: (weekNumber: number, date: Date) => Promise<CourseDay[]>;
   sendMessageInChat?: (chat: Chat, content: string) => Promise<void>;
   setNewsAsAcknowledged?: (news: News) => Promise<News>;
   setHomeworkCompletion?: (

@@ -11,6 +11,7 @@ import { File, Directory, Paths } from 'expo-file-system';
 import ActivityIndicator from "@/components/ActivityIndicator"
 import { NativeHeaderPressable, NativeHeaderSide } from "@/ui/components/NativeHeader"
 import Icon from "@/ui/components/Icon"
+import { router } from "expo-router";
 import { Papicons } from "@getpapillon/papicons"
 import { MenuView } from "@react-native-menu/menu"
 
@@ -49,6 +50,8 @@ const WallpaperModal = () => {
     fetchCollections();
   }, []);
 
+
+
   const [currentlyDownloading, setCurrentlyDownloading] = useState<string[]>([]);
 
   const settingsStore = useSettingsStore(state => state.personalization);
@@ -57,6 +60,19 @@ const WallpaperModal = () => {
   const currentWallpaper = settingsStore.wallpaper;
   const selectedId = currentWallpaper?.id;
   const hasCustomWallpaper = selectedId?.startsWith("custom:") ?? false;
+
+  const flatListRef = React.useRef<FlatList>(null);
+
+  useEffect(() => {
+    if (collections.length > 0 && currentWallpaper) {
+      const collectionIndex = collections.findIndex((collection) => collection.images.find((image) => image.id === currentWallpaper.id));
+      if (collectionIndex !== -1) {
+        setTimeout(() => {
+          flatListRef.current?.scrollToIndex({ index: collectionIndex, animated: true });
+        }, 500);
+      }
+    }
+  }, [collections, currentWallpaper]);
 
   const wallpaperDirectory = new Directory(Paths.document, "wallpapers");
 
@@ -68,7 +84,10 @@ const WallpaperModal = () => {
       mutateProperty("personalization", {
         wallpaper: {
           id: wallpaper.id,
-          url: wallpaperFile.uri
+          path: {
+            directory: wallpaperDirectory.name,
+            name: wallpaperFile.name
+          }
         }
       })
       return;
@@ -76,16 +95,17 @@ const WallpaperModal = () => {
 
     setCurrentlyDownloading((prev) => [...prev, wallpaper.id]);
 
-
     if (!wallpaperDirectory.exists) {
       wallpaperDirectory.create();
     }
-    File.downloadFileAsync(wallpaper.url, wallpaperFile).then((result) => {
-      const newUrl = result.uri;
+    File.downloadFileAsync(wallpaper.url!, wallpaperFile).then((result) => {
       mutateProperty("personalization", {
         wallpaper: {
           id: wallpaper.id,
-          url: newUrl
+          path: {
+            directory: wallpaperDirectory.name,
+            name: result.name
+          }
         }
       })
     }).finally(() => {
@@ -102,16 +122,25 @@ const WallpaperModal = () => {
       }).then((result) => {
         if (result.canceled) return;
 
-        const file = result.assets[0];
+        const asset = result.assets[0];
+        const sourceFile = new File(asset.uri);
 
-        const importedFile = new File(file);
-        importedFile.copy(wallpaperDirectory);
-        importedFile.rename(`custom:${Date.now()}.jpg`);
+        if (!wallpaperDirectory.exists) {
+          wallpaperDirectory.create();
+        }
+
+        const newFileName = `custom:${Date.now()}.jpg`;
+        const destFile = new File(wallpaperDirectory, newFileName);
+
+        sourceFile.copy(destFile);
 
         mutateProperty("personalization", {
           wallpaper: {
             id: `custom:${Date.now()}`,
-            url: importedFile.uri
+            path: {
+              directory: wallpaperDirectory.name,
+              name: destFile.name
+            }
           }
         })
       })
@@ -123,15 +152,16 @@ const WallpaperModal = () => {
   return (
     <>
       <FlatList
-        contentInsetAdjustmentBehavior="automatic"
+        ref={flatListRef}
         data={collections}
         style={{
           flex: 1,
         }}
         contentContainerStyle={{
-          gap: 16
+          gap: 16,
+          paddingTop: Platform.OS === 'android' ? 20 : 72
         }}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <View>
             <Stack direction="horizontal" alignItems="center" gap={8} padding={[16, 10]}>
               {item.icon &&
@@ -160,10 +190,15 @@ const WallpaperModal = () => {
                 paddingHorizontal: 12
               }}
               contentContainerStyle={{
-                gap: 6
+                gap: 6,
+                paddingRight: 12
               }}
               showsHorizontalScrollIndicator={false}
               renderItem={({ item }) => <WallpaperImage item={item} onPress={() => downloadAndSelect(item)} selectedId={currentWallpaper?.id} isDownloading={currentlyDownloading.includes(item.id)} />}
+              getItemLayout={(data, index) => (
+                { length: 160 + 6, offset: (160 + 6) * index, index }
+              )}
+              initialScrollIndex={item.images.findIndex((image) => image.id === currentWallpaper?.id) !== -1 ? item.images.findIndex((image) => image.id === currentWallpaper?.id) : undefined}
             />
           </View>
         )}
@@ -171,19 +206,35 @@ const WallpaperModal = () => {
           <RefreshControl
             refreshing={loading}
             onRefresh={fetchCollections}
+            progressViewOffset={72}
           />
         }
       />
 
-      <NativeHeaderSide side="Left" key={currentWallpaper?.id + ":" + "upload:" + hasCustomWallpaper ? "true" : "false"}>
-        <NativeHeaderPressable onPress={() => uploadCustomWallpaper()}>
-          <Icon size={28} fill={hasCustomWallpaper ? colors.primary : undefined}>
-            <Papicons name="Gallery" />
-          </Icon>
-        </NativeHeaderPressable>
+      <NativeHeaderSide side="Left" key={currentWallpaper?.id + ":" + "upload:" + (hasCustomWallpaper ? "true" : "false")}>
+        {Platform.OS === 'android' ? (
+          <NativeHeaderPressable onPress={() => router.back()}>
+            <Icon size={28}>
+              <Papicons name="Cross" />
+            </Icon>
+          </NativeHeaderPressable>
+        ) : (
+          <NativeHeaderPressable onPress={() => uploadCustomWallpaper()}>
+            <Icon size={28} fill={hasCustomWallpaper ? colors.primary : undefined}>
+              <Papicons name="Gallery" />
+            </Icon>
+          </NativeHeaderPressable>
+        )}
       </NativeHeaderSide>
 
       <NativeHeaderSide side="Right" key={currentWallpaper?.id + ":" + wallpaperDirectory.exists}>
+        {Platform.OS === 'android' && (
+          <NativeHeaderPressable onPress={() => uploadCustomWallpaper()}>
+            <Icon size={28} fill={hasCustomWallpaper ? colors.primary : undefined}>
+              <Papicons name="Gallery" />
+            </Icon>
+          </NativeHeaderPressable>
+        )}
         <MenuView
           actions={[
             {

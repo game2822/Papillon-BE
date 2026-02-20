@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import { StyleProp, ViewStyle } from 'react-native';
 
 import { Services } from '@/stores/account/types';
-import { useAlert } from '@/ui/components/AlertProvider';
 export interface SupportedService {
   name: string;
   title: string;
@@ -24,7 +23,6 @@ export function GetSupportedServices(redirect: (path: { pathname: string, option
   const theme = useTheme();
   const { colors } = theme;
   const { t } = useTranslation()
-  const alert = useAlert();
 
   return [
     {
@@ -44,14 +42,7 @@ export function GetSupportedServices(redirect: (path: { pathname: string, option
       type: "main",
       image: require("@/assets/images/service_ed.png"),
       onPress: () => {
-        alert.showAlert({
-          title: "Service en maintenance",
-          description: "Suite à des changements récents de la part d'EcoleDirecte, ce service est momentanément indisponible.",
-          icon: "TriangleAlert",
-          color: "#D60046",
-          withoutNavbar: true
-        })
-        //redirect({ pathname: './ecoledirecte/credentials', options: { service: Services.ECOLEDIRECTE } });
+        redirect({ pathname: './ecoledirecte/credentials', options: { service: Services.ECOLEDIRECTE } });
       },
       variant: 'service' as const,
       color: 'light' as const,
@@ -115,6 +106,16 @@ export function GetSupportedUniversities(redirect: (path: { pathname: string, op
 
   return [
     {
+      name: "iut-lannion",
+      title: "IUT de Lannion",
+      hasLimitedSupport: false,
+      image: require("@/assets/images/univ_lannion.png"),
+      type: "main",
+      onPress: () => {
+        redirect({ pathname: './lannion/credentials' });
+      },
+    },
+    {
       name: "univ-lorraine",
       title: "Université de Lorraine",
       hasLimitedSupport: false,
@@ -142,16 +143,6 @@ export function GetSupportedUniversities(redirect: (path: { pathname: string, op
       type: "main",
       onPress: () => {
         redirect({ pathname: './multi/credentials', options: { color: "#008DB0", university: "UPHF", url: "https://appmob.uphf.fr/backend" } });
-      },
-    },
-    {
-      name: "iut-lannion",
-      title: "IUT de Lannion",
-      hasLimitedSupport: false,
-      image: require("@/assets/images/univ_lannion.png"),
-      type: "main",
-      onPress: () => {
-        redirect({ pathname: './lannion/credentials' });
       },
     },
     {
@@ -301,7 +292,7 @@ export function GetSupportedRestaurants(redirect: (path: { pathname: string }) =
       name: "alise",
       title: "Alise",
       hasLimitedSupport: false,
-      image: require("@/assets/images/alise.png"),
+      image: require("@/assets/images/alise.jpg"),
       type: "main",
       onPress: () => {
         redirect({ pathname: '../alise/credentials' });
