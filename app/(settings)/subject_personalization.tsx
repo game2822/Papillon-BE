@@ -3,17 +3,16 @@ import { useTheme } from "@react-navigation/native";
 import { router } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
 
 import { useAccountStore } from "@/stores/account";
 import AnimatedPressable from "@/ui/components/AnimatedPressable";
 import Icon from "@/ui/components/Icon";
 import Item, { Leading, Trailing } from "@/ui/components/Item";
 import List from "@/ui/components/List";
+import { NativeHeaderPressable, NativeHeaderSide } from "@/ui/components/NativeHeader";
 import Stack from "@/ui/components/Stack";
 import Typography from "@/ui/components/Typography";
-import { useSettingsStore } from "@/stores/settings";
-import { NativeHeaderPressable, NativeHeaderSide } from "@/ui/components/NativeHeader";
 
 export default function SubjectPersonalization() {
   const { colors } = useTheme();
@@ -29,7 +28,23 @@ export default function SubjectPersonalization() {
   })).filter(item => item.name && item.emoji && item.color);
 
   const resetAllSubjects = () => {
-    store.setSubjects({});
+    Alert.alert(
+      t("Settings_Subjects_Reset_Title"),
+      t("Settings_Subjects_Reset_Message"),
+      [
+        {
+          text: t("CANCEL_BTN"),
+          style: "cancel",
+        },
+        {
+          text: t("Settings_Subjects_Reset_Button"),
+          style: "destructive",
+          onPress: () => {
+            store.setSubjects({});
+          },
+        },
+      ]
+    );
   };
 
   function renderItem(emoji: string, name: string, id: string, color: string) {
