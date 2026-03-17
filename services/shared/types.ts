@@ -1,3 +1,4 @@
+import { User } from "appscho";
 import { Multi as MultiClient } from "esup-multi.js";
 import { Identification } from "ezly";
 import { Session } from "pawdirecte";
@@ -7,6 +8,9 @@ import { Skolengo as SkolengoSession } from "skolengojs";
 import { Client as TurboselfClient } from "turboself-api";
 import { SmartSchool as SmartSchoolSession } from "smartschooljs";
 
+import { Appscho } from "@/services/appscho";
+import { Lannion } from "@/services/lannion";
+import { LannionClient } from "@/services/lannion/module";
 import { Pronote } from "@/services/pronote";
 import { Attendance } from "@/services/shared/attendance";
 import {
@@ -34,8 +38,6 @@ import { Smartschool } from "../smartschool";
 import { TurboSelf } from "../turboself";
 import { Balance } from "./balance";
 import { Kid } from "./kid";
-import { User } from "appscho";
-import { Appscho } from "@/services/appscho";
 
 /** Represents a plugin for a school service.
  *
@@ -58,11 +60,12 @@ export interface SchoolServicePlugin {
     | Session
     | TurboselfClient
     | User
+    | LannionClient
     | undefined;
 
   refreshAccount: (
     credentials: Auth
-  ) => Promise<Pronote | Skolengo | Smartschool | EcoleDirecte | Multi | TurboSelf | ARD | Izly | Alise | Appscho>;
+  ) => Promise<Pronote | Skolengo | Smartschool | EcoleDirecte | Multi | TurboSelf | ARD | Izly | Alise | Appscho | Lannion>;
   getKids?: () => Kid[];
   getCanteenKind?: () => CanteenKind;
   getHomeworks?: (weekNumber: number) => Promise<Homework[]>;

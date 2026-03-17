@@ -63,13 +63,17 @@ export default function OnboardingLayout() {
                     options={{ ...newScreenOptions }}
                 />
                 <Stack.Screen
+                    name="university/lannion/credentials"
+                    options={{ ...newScreenOptions }}
+                />
+                <Stack.Screen
                     name="pronote/url"
                     options={{ ...newScreenOptions }}
                 />
                 <Stack.Screen
                     name="pronote/webview"
                     options={{ ...newScreenOptions }}
-                    initialParams={{ url: "" }}
+                    initialParams={{ url: "", serviceId: undefined }}
                 />
                 <Stack.Screen
                     name="pronote/credentials"
