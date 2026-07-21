@@ -6,7 +6,7 @@ import { Papicons } from "@getpapillon/papicons";
 import { useTheme } from "@react-navigation/native";
 import { t } from "i18next";
 import React from "react";
-import { Text, View, ViewStyle } from "react-native";
+import { Platform, Text, View, ViewStyle } from "react-native";
 
 const ModalOverhead = ({ style, overhead, overtitle, color, emoji, subject, subjectVariant = "title", title, date, dateFormat }: { style?: ViewStyle, overhead?: React.ReactNode, overtitle?: string, color: string, emoji: string, subject: string, subjectVariant?: Variant, title?: string, date?: Date, dateFormat?: Intl.DateTimeFormatOptions }) => {
   const theme = useTheme();
@@ -21,19 +21,19 @@ const ModalOverhead = ({ style, overhead, overtitle, color, emoji, subject, subj
     >
       <View
         style={{
-          backgroundColor: color + "22",
+          backgroundColor: Platform.OS === 'ios' ? color + "22" : "transparent",
           width: 48,
           height: 48,
           borderRadius: 120,
           alignItems: "center",
           justifyContent: "center",
           borderColor: color + "22",
-          borderWidth: 1,
+          borderWidth: Platform.OS === 'ios' ? 1 : 0,
         }}
       >
         <Text
           style={{
-            fontSize: 28
+            fontSize: Platform.OS === 'ios' ? 28 : 36,
           }}
         >
           {emoji}
@@ -45,7 +45,8 @@ const ModalOverhead = ({ style, overhead, overtitle, color, emoji, subject, subj
       {overtitle && (
         <Typography
           variant="body1"
-          color='secondary'
+            color='secondary'
+            align="center"
         >
           {overtitle}
         </Typography>
@@ -62,6 +63,7 @@ const ModalOverhead = ({ style, overhead, overtitle, color, emoji, subject, subj
       {title && (
         <Typography
           variant="body1"
+          align="center"
         >
           {title}
         </Typography>
@@ -70,6 +72,7 @@ const ModalOverhead = ({ style, overhead, overtitle, color, emoji, subject, subj
         <Typography
           variant="body1"
           color='secondary'
+          align="center"
         >
           {new Date(date).toLocaleDateString(undefined, dateFormat ? dateFormat : {
             day: "numeric",
@@ -82,7 +85,7 @@ const ModalOverhead = ({ style, overhead, overtitle, color, emoji, subject, subj
   )
 }
 
-const ModalOverHeadScore = ({ color, score, outOf }: { color: string, score: string, outOf: number }) => {
+const ModalOverHeadScore = ({ color, score, outOf }: { color: string, score: string, outOf: number | string }) => {
   const theme = useTheme();
 
   return (
@@ -97,7 +100,7 @@ const ModalOverHeadScore = ({ color, score, outOf }: { color: string, score: str
         {score}
       </Typography>
       <Typography variant='h3' weight='semibold' color={adjust(color, theme.dark ? 0.3 : -0.3)} style={{ marginBottom: 7, opacity: 0.5 }}>
-        /{outOf}
+        {typeof outOf === "string" && outOf.startsWith("%") ? outOf : `/${outOf}`}
       </Typography>
     </Stack>
   )

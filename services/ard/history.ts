@@ -1,4 +1,4 @@
-import { Client } from "pawrd";
+import { Client } from "@blockshub/blocksrd";
 import { CanteenHistoryItem } from "../shared/canteen";
 import { error } from "@/utils/logger/logger";
 

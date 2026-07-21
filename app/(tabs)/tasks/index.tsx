@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import TasksHeader from './components/TasksHeader';
 import TasksList from './components/TasksList';
@@ -9,6 +9,8 @@ import { useTaskFilters } from './hooks/useTaskFilters';
 import { useWeekSelection } from './hooks/useWeekSelection';
 
 import { useAlert } from "@/ui/components/AlertProvider";
+import { useTheme } from '@react-navigation/native';
+import MainTabErrorBoundary from '@/ui/components/MainTabErrorBoundary';
 
 const TasksView: React.FC = () => {
   const alert = useAlert();
@@ -44,6 +46,8 @@ const TasksView: React.FC = () => {
     sections,
   } = useTaskFilters(homeworksFromCache, homework);
 
+  const theme = useTheme();
+
   return (
     <>
       {showWeekPicker && (
@@ -53,7 +57,7 @@ const TasksView: React.FC = () => {
           onClose={() => setShowWeekPicker(false)}
         />
       )}
-      <View style={styles.container}>
+      <View style={[styles.container]}>
         <TasksHeader
           defaultWeek={defaultWeek}
           selectedWeek={selectedWeek}
@@ -89,4 +93,10 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TasksView;
+const TasksViewWithBoundary = () => (
+  <MainTabErrorBoundary>
+    <TasksView />
+  </MainTabErrorBoundary>
+);
+
+export default TasksViewWithBoundary;

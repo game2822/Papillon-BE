@@ -1,6 +1,6 @@
 import { Auth, Services } from "@/stores/account/types";
 import { Capabilities, SchoolServicePlugin } from "../shared/types";
-import { Client } from "pawrd";
+import { Client } from "@blockshub/blocksrd";
 import { refreshArdAccount } from "./refresh";
 import { Balance } from "../shared/balance";
 import { error } from "@/utils/logger/logger";
@@ -35,8 +35,9 @@ export class ARD implements SchoolServicePlugin {
     if (this.session) {
       return fetchArdBalance(this.session, this.accountId, this.authData);
     }
-		
+
     error("Session is not valid", "ARD.getCanteenBalances");
+    return [];
   }
 
   async getCanteenTransactionsHistory(): Promise<CanteenHistoryItem[]> {
@@ -45,5 +46,6 @@ export class ARD implements SchoolServicePlugin {
     }
 
     error("Session is not valid", "ARD.getCanteenTransactionsHistory")
+    return [];
   }
 }

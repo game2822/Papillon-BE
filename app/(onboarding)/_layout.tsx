@@ -1,25 +1,25 @@
 import React from 'react';
-import { View } from 'react-native';
+import { Platform, StatusBar, View } from 'react-native';
+import { Stack } from "expo-router";
 
+import { useScreenOptions } from "@/utils/theme/ScreenOptions";
+import AndroidHeaderBackground, { AndroidHeaderProps } from '@/components/AndroidHeaderBackground';
 import { Services } from '@/stores/account/types';
-import { Stack } from '@/utils/native/AnimatedNavigator';
-import { screenOptions } from "@/utils/theme/ScreenOptions";
+import { t } from 'i18next';
 
 export default function OnboardingLayout() {
-    const newScreenOptions = React.useMemo(() => ({
-        ...screenOptions,
-        headerShown: false,
-        headerBackVisible: true,
-        headerTitle: '',
-        gestureEnabled: false,
-        headerTransparent: true,
-        headerTintColor: "#FFFFFF",
-        headerBackButtonDisplayMode: "minimal",
-        headerBackButtonMenuEnabled: false
-    }), []);
+  const screenOptions = useScreenOptions();
+  const newScreenOptions = React.useMemo(() => ({
+    ...screenOptions,
+    headerShown: true,
+    ...AndroidHeaderProps,
+    headerTransparent: true,
+    headerBackButtonDisplayMode: "minimal",
+    headerLargeTitle: false,
+  }), [screenOptions]);
 
     return (
-        <View style={{ flex: 1, backgroundColor: "black" }}>
+        <View style={{ flex: 1, backgroundColor: Platform.OS === "ios" ? "black" : undefined }}>
             <Stack>
                 <Stack.Screen
                     name="welcome"
