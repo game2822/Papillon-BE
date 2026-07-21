@@ -1,15 +1,13 @@
 import { Client } from "@blockshub/blocksdirecte";
-import { User } from "appscho";
+import { User } from "@blockshub/blockscho";
 import { Multi as MultiClient } from "esup-multi.js";
 import { Identification } from "ezly";
 import { SessionHandle } from "pawnote";
-import { Client as ArdClient } from "pawrd";
+import { Client as ArdClient } from "@blockshub/blocksrd";
 import { Skolengo as SkolengoSession } from "skolengojs";
 import { Client as TurboselfClient } from "turboself-api";
 
 import { Appscho } from "@/services/appscho";
-import { Lannion } from "@/services/lannion";
-import { LannionClient } from "@/services/lannion/module";
 import { Pronote } from "@/services/pronote";
 import { Attendance } from "@/services/shared/attendance";
 import {
@@ -49,20 +47,20 @@ export interface SchoolServicePlugin {
   capabilities: Capabilities[];
   authData: Auth;
   session:
-    | ArdClient
+    | any
     | Identification
     | MultiClient
     | SessionHandle
     | SkolengoSession
     | Client
+    | ArdClient
     | TurboselfClient
     | User
-    | LannionClient
     | undefined;
 
   refreshAccount: (
     credentials: Auth
-  ) => Promise<Pronote | Skolengo | EcoleDirecte | Multi | TurboSelf | ARD | Izly | Alise | Appscho | Lannion>;
+  ) => Promise<Pronote | Skolengo | EcoleDirecte | Multi | TurboSelf | ARD | Izly | Alise | Appscho>;
   getKids?: () => Kid[];
   getCanteenKind?: () => CanteenKind;
   getHomeworks?: (weekNumber: number) => Promise<Homework[]>;

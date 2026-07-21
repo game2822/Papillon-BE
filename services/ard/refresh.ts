@@ -1,4 +1,4 @@
-import { Authenticator, Client } from "pawrd";
+import { Authenticator, Client } from "@blockshub/blocksrd";
 
 import { Auth } from "@/stores/account/types";
 

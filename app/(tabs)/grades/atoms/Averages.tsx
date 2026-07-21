@@ -17,14 +17,23 @@ import AnimatedNumber from "@/ui/components/AnimatedNumber";
 import { Dynamic } from "@/ui/components/Dynamic";
 import Icon from "@/ui/components/Icon";
 import Stack from "@/ui/components/Stack";
-import Typography from "@/ui/components/Typography";
+import Typography from "@/ui/new/Typography";
 import { PapillonAppearIn, PapillonAppearOut } from "@/ui/utils/Transition";
 import adjust from "@/utils/adjustColor";
+import PapillonMedian from "@/utils/grades/algorithms/median";
 import PapillonSubjectAvg from "@/utils/grades/algorithms/subject";
 import PapillonGradesAveragesOverTime from "@/utils/grades/algorithms/time";
 import PapillonWeightedAvg from "@/utils/grades/algorithms/weighted";
+import {
+  GradeDisplayScale,
+  getDisplayDenominator,
+  getDisplayScaleMax,
+  toDisplayScaleFrom20,
+} from "@/utils/grades/scale";
 
 import { calculateAmplifiedGraphPoints, GraphPoint } from "../utils/graph";
+import ActionMenu from "@/ui/components/ActionMenu";
+import { trackAdvancedEvent } from "@/utils/logger/analytics";
 
 
 const algorithms = [
@@ -42,10 +51,29 @@ const algorithms = [
     description: t('Grades_Avg_All_Pond_Description'),
     algorithm: PapillonWeightedAvg,
     sfsymbol: "plus.forwardslash.minus"
+  },
+  {
+    key: "median",
+    label: t('Grades_Avg_Median_Title'),
+    description: t('Grades_Avg_Median_Description'),
+    algorithm: PapillonMedian,
+    sfsymbol: "chart.bar.xaxis.ascending"
   }
 ]
 
-const Averages = ({ grades, realAverage, color, scale = 20 }: { grades: Grade[], realAverage?: number, color?: string, scale?: number }) => {
+const Averages = ({
+  grades,
+  realAverage,
+  color,
+  displayScale = "20",
+  inline = false,
+}: {
+  grades: Grade[],
+  realAverage?: number,
+  color?: string,
+  displayScale?: GradeDisplayScale,
+  inline?: boolean
+}) => {
   try {
     const theme = useTheme();
     const accent = color || theme.colors.primary;
@@ -65,12 +93,15 @@ const Averages = ({ grades, realAverage, color, scale = 20 }: { grades: Grade[],
             date: new Date(),
           });
         }
-        return history;
+        return history.map(entry => ({
+          ...entry,
+          average: toDisplayScaleFrom20(entry.average, displayScale),
+        }));
       } catch (e) {
         console.error("Error calculating average history:", e);
         return [];
       }
-    }, [grades, algorithm, realAverage]);
+    }, [grades, algorithm, realAverage, displayScale]);
 
     const initialAverage = useMemo(() => {
       if (currentAverageHistory.length === 0) {
@@ -82,14 +113,14 @@ const Averages = ({ grades, realAverage, color, scale = 20 }: { grades: Grade[],
 
       if (algorithm.canInjectRealAverage && realAverage) {
         return {
-          average: realAverage,
+          average: toDisplayScaleFrom20(realAverage, displayScale),
           date: new Date(),
         };
       }
 
       if (!currentAverageHistory || currentAverageHistory.length === 0) { return null; }
       return currentAverageHistory[currentAverageHistory.length - 1];
-    }, [currentAverageHistory, algorithm, realAverage]);
+    }, [currentAverageHistory, algorithm, realAverage, displayScale]);
 
     const [shownAverage, setShownAverage] = useState(initialAverage ? initialAverage.average : 0);
     const [shownDate, setShownDate] = useState(initialAverage ? initialAverage.date : new Date());
@@ -124,12 +155,20 @@ const Averages = ({ grades, realAverage, color, scale = 20 }: { grades: Grade[],
     }, [active]);
 
     const graphAxis = useMemo<GraphPoint[]>(() => {
-      return calculateAmplifiedGraphPoints(currentAverageHistory, scale);
-    }, [currentAverageHistory, scale]);
+      return calculateAmplifiedGraphPoints(currentAverageHistory, getDisplayScaleMax(displayScale));
+    }, [currentAverageHistory, displayScale]);
+
+    const displayedRealAverage = useMemo(() => {
+      if (realAverage === undefined) {
+        return undefined;
+      }
+
+      return toDisplayScaleFrom20(realAverage, displayScale);
+    }, [realAverage, displayScale]);
 
     const isRealAverage = useMemo(() => {
-      return shownAverage === realAverage;
-    }, [shownAverage, realAverage]);
+      return shownAverage === displayedRealAverage;
+    }, [shownAverage, displayedRealAverage]);
 
     const backgroundColor = useMemo(() => {
       return adjust(accent, theme.dark ? -0.89 : 0.8);
@@ -151,31 +190,52 @@ const Averages = ({ grades, realAverage, color, scale = 20 }: { grades: Grade[],
         style={{
           width: "100%"
         }}
-        entering={PapillonAppearIn}
-        exiting={PapillonAppearOut}
+        entering={!inline ? PapillonAppearIn : undefined}
+        exiting={!inline ? PapillonAppearOut : undefined}
       >
         <LayoutAnimationConfig skipEntering={true} skipExiting={true}>
           <Stack
-            card
+            card={!inline}
             hAlign="center"
             vAlign="center"
+            direction={inline ? "horizontal" : "vertical"}
             gap={0}
+            style={[
+              Platform.OS === 'android' ? {
+                borderWidth: 0,
+                backgroundColor: theme.colors.card,
+                elevation: 0
+              } : {},
+              inline ? {
+                overflow: "hidden",
+                backgroundColor: "transparent",
+                marginTop: -8,
+              } : {
+                height: 180,
+              }
+            ]}
           >
-            <LinearGradient
-              colors={[backgroundColor + "90", backgroundColor + "00"]}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                borderRadius: 20,
-              }}
-            />
+            {Platform.OS === 'ios' && (
+              <LinearGradient
+                colors={[backgroundColor + "90", backgroundColor + "00"]}
+                start={inline ? [0, 1] : [0, 0]}
+                end={inline ? [0, 0] : [0, 1]}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  borderRadius: 20,
+                }}
+              />
+            )}
 
             <View
               style={{
                 width: "100%",
+                flex: 1,
+                marginLeft: inline ? -2 : 0,
                 height: 100,
                 overflow: "hidden"
               }}
@@ -199,7 +259,7 @@ const Averages = ({ grades, realAverage, color, scale = 20 }: { grades: Grade[],
                     onGestureEnd={handleGestureEnd}
                     verticalPadding={30}
                     horizontalPadding={30}
-                    lineThickness={5}
+                    lineThickness={inline ? 4.5 : 5}
                     panGestureDelay={0}
                     enableIndicator={true}
                     enableFadeInMask={true}
@@ -213,82 +273,92 @@ const Averages = ({ grades, realAverage, color, scale = 20 }: { grades: Grade[],
               </View>
             </View>
 
-            <Stack animated direction="horizontal" hAlign="end" vAlign="end" gap={2} style={{ marginTop: -12 }}>
-              <AnimatedNumber variant="h1" color={adjustedColor}>
-                {shownAverage ? shownAverage.toFixed(2) : "0.00"}
-              </AnimatedNumber>
-              <Dynamic animated>
-                <Typography variant="title" style={{ color: adjustedColor, marginBottom: 4, opacity: 0.7 }}>
-                  /{scale}
-                </Typography>
-              </Dynamic>
-            </Stack>
+            <Stack inline flex hAlign={inline ? "start" : "center"} vAlign="center" gap={0} style={{ marginTop: inline ? 0 : -10, marginLeft: inline ? -24 : 0, marginRight: inline ? 20 : 0 }}>
+              <Stack animated direction="horizontal" hAlign="end" vAlign="end" gap={2}>
+                <AnimatedNumber variant={inline ? "h2" : "h1"} color={adjustedColor}>
+                  {shownAverage ? shownAverage.toFixed(2) : "0.00"}
+                </AnimatedNumber>
+                <Dynamic animated>
+                  <Typography variant="title" style={{ color: adjustedColor, marginBottom: inline ? 1 : 3, opacity: 0.7 }}>
+                    {getDisplayDenominator(displayScale)}
+                  </Typography>
+                </Dynamic>
+              </Stack>
 
-            <MenuView
-              actions={[
-                {
-                  title: t('Grades_Avg_Methods'),
-                  subactions: algorithms.map((algo) => ({
-                    id: "setAlg:" + algo.key,
-                    title: algo.label,
-                    subtitle: algo.description,
-                    state: algorithm.key === algo.key ? "on" : "off",
+              <ActionMenu
+                actions={[
+                  {
+                    title: t('Grades_Avg_Methods'),
+                    subactions: algorithms.map((algo) => ({
+                      id: "setAlg:" + algo.key,
+                      title: algo.label,
+                      subtitle: algo.description,
+                      state: algorithm.key === algo.key ? "on" : "off",
+                      image: Platform.select({
+                        ios: algo.sfsymbol
+                      }),
+                      imageColor: theme.colors.text
+                    })),
+                    displayInline: true
+                  },
+                  {
+                    id: 'open:more',
+                    papicon: "info",
+                    title: t('Grades_Avg_KnowMore'),
+                    subtitle: t('Grades_Avg_KnowMore_Description'),
                     image: Platform.select({
-                      ios: algo.sfsymbol
+                      ios: "info.circle"
                     }),
                     imageColor: theme.colors.text
-                  })),
-                  displayInline: true
-                },
-                {
-                  id: 'open:more',
-                  title: t('Grades_Avg_KnowMore'),
-                  subtitle: t('Grades_Avg_KnowMore_Description'),
-                  image: Platform.select({
-                    ios: "info.circle"
-                  }),
-                  imageColor: theme.colors.text
-                }
-              ]}
-              onPressAction={({ nativeEvent }) => {
-                const actionId = nativeEvent.event;
-
-                if (actionId.startsWith("open:")) {
-                  if (actionId === "open:more") {
-                    WebBrowser.openBrowserAsync("https://docs.papillon.bzh/support/kb/averages", {
-                      presentationStyle: "pageSheet"
-                    });
                   }
-                }
+                ]}
+                onPressAction={({ nativeEvent }) => {
+                  const actionId = nativeEvent.event;
 
-                if (actionId.startsWith("setAlg:")) {
-                  setAlgorithm(algorithms.find((algo) => algo.key === actionId.slice(7))!);
-                }
-              }}
-            >
-              <TouchableOpacity>
-                <Stack hAlign="center" vAlign="center" direction="horizontal" style={{ marginTop: -2 }}>
-                  <Typography variant="title" align="center">
-                    {algorithm.label}
-                  </Typography>
-                  <Icon size={20} opacity={0.5}>
-                    <Papicons name="chevronDown" />
-                  </Icon>
-                </Stack>
-              </TouchableOpacity>
-            </MenuView>
+                  if (actionId.startsWith("open:")) {
+                    if (actionId === "open:more") {
+                      WebBrowser.openBrowserAsync("https://docs.papillon.bzh/support/kb/averages", {
+                        presentationStyle: "pageSheet"
+                      });
+                    }
+                  }
 
-            <Dynamic animated key={"dateSource:" + (isRealAverage ? "real" : "estimated")}>
-              <Typography color="secondary" style={{ marginTop: 1 }}>
-                {isRealAverage ? "par l'établissement" :
-                  "estimée au " + (shownDate instanceof Date && !isNaN(shownDate.getTime()) ? shownDate.toLocaleDateString(undefined, {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric"
-                  }) : "Unknown Date")}
-              </Typography>
-            </Dynamic>
-            <View style={{ height: 14 }} />
+                  if (actionId.startsWith("setAlg:")) {
+                    const nextAlgorithm = algorithms.find((algo) => algo.key === actionId.slice(7));
+                    if (nextAlgorithm) {
+                      setAlgorithm(nextAlgorithm);
+                      trackAdvancedEvent("grades_calculation_method_changed", {
+                        method: nextAlgorithm.key,
+                      });
+                    }
+                  }
+                }}
+              >
+                <TouchableOpacity style={{ width: "100%", overflow: "hidden" }}>
+                  <Stack hAlign="center" vAlign={inline ? "start" : "center"} direction="horizontal" style={{ marginTop: -2 }}>
+                    <Typography variant={inline ? "body1" : "title"} weight="bold" align="center">
+                      {algorithm.label}
+                    </Typography>
+                    <Icon size={20} opacity={0.5}>
+                      <Papicons name="chevronDown" />
+                    </Icon>
+                  </Stack>
+                </TouchableOpacity>
+              </ActionMenu>
+
+              <Dynamic animated key={"dateSource:" + (isRealAverage ? "real" : "estimated")}>
+                <Typography variant={inline ? "body2" : "body1"} color="textSecondary" style={{ marginTop: inline ? 0 : 1, flex: 1 }} numberOfLines={1} ellipsizeMode="tail" align={inline ? "left" : "center"}>
+                  {isRealAverage ? "par l'établissement" :
+                    "estimée au " + (shownDate instanceof Date && !isNaN(shownDate.getTime()) ? shownDate.toLocaleDateString(undefined, {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric"
+                    }) : "Unknown Date")}
+                </Typography>
+              </Dynamic>
+              {!inline && <View style={{ height: 14 }} />}
+            </Stack>
+
           </Stack>
         </LayoutAnimationConfig>
       </Reanimated.View>

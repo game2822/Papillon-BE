@@ -4,9 +4,8 @@ import { MenuView } from '@react-native-menu/menu';
 import { useTheme } from '@react-navigation/native';
 import { useNavigation } from 'expo-router';
 import { t } from 'i18next';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, Platform, RefreshControl, View } from 'react-native';
-import { useBottomTabBarHeight } from 'react-native-bottom-tabs';
 import Reanimated, { LinearTransition, useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -19,12 +18,12 @@ import { Dynamic } from '@/ui/components/Dynamic';
 import { ErrorBoundary } from '@/ui/components/ErrorBoundary';
 import Icon from '@/ui/components/Icon';
 import Item, { Trailing } from '@/ui/components/Item';
-import List from '@/ui/components/List';
+import LegacyList from '@/ui/components/List';
 import Search from '@/ui/components/Search';
 import Stack from '@/ui/components/Stack';
 import TabHeader from '@/ui/components/TabHeader';
 import TabHeaderTitle from '@/ui/components/TabHeaderTitle';
-import Typography from '@/ui/components/Typography';
+import LegacyTypography from '@/ui/components/Typography';
 import { useKeyboardHeight } from '@/ui/hooks/useKeyboardHeight';
 import { PapillonAppearIn, PapillonAppearOut } from '@/ui/utils/Transition';
 import { getCurrentPeriod } from '@/utils/grades/helper/period';
@@ -33,22 +32,28 @@ import { getPeriodName, getPeriodNumber, isPeriodWithNumber } from "@/utils/serv
 import { getSubjectColor } from "@/utils/subjects/colors";
 import { getSubjectEmoji } from "@/utils/subjects/emoji";
 import { getSubjectName } from "@/utils/subjects/name";
+import { getGradeDisplayScale } from "@/utils/grades/scale";
 
 import Averages from './atoms/Averages';
 import FeaturesMap from './atoms/FeaturesMap';
 import { SubjectItem } from './atoms/Subject';
 import { useGradeInfluence } from './hooks/useGradeInfluence';
+import List from '@/ui/new/List';
+import Typography from '@/ui/new/Typography';
+import ActionMenu from '@/ui/components/ActionMenu';
+import MainTabErrorBoundary from '@/ui/components/MainTabErrorBoundary';
+import { trackAdvancedEvent } from '@/utils/logger/analytics';
 
 const MemoizedSubjectItem = React.memo(SubjectItem);
 
 const GradesView: React.FC = () => {
   // Layout du header
   const [headerHeight, setHeaderHeight] = useState(0);
-  const bottomTabBarHeight = useBottomTabBarHeight();
 
   // Thème
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const bottomTabBarHeight = 0;
   const navigation = useNavigation();
 
   // Chargement
@@ -61,6 +66,7 @@ const GradesView: React.FC = () => {
   // Sortings
   const settings = useSettingsStore(state => state.personalization);
   const mutateSettings = useSettingsStore(state => state.mutateProperty);
+  const displayScale = getGradeDisplayScale(settings.gradesDisplayScale);
 
   const [sortMethod, setSortMethod] = useState<string>(settings.gradesSortMethod || "date");
 
@@ -78,6 +84,7 @@ const GradesView: React.FC = () => {
     {
       label: t("Grades_Sorting_Alphabetical"),
       value: "alphabetical",
+      papicon: "letter",
       icon: {
         ios: "character",
         android: "ic_alphabetical",
@@ -87,6 +94,7 @@ const GradesView: React.FC = () => {
     {
       label: t("Grades_Sorting_Date"),
       value: "date",
+      papicon: "calendar",
       icon: {
         ios: "calendar",
         android: "ic_date",
@@ -96,6 +104,7 @@ const GradesView: React.FC = () => {
     {
       label: t("Grades_Sorting_Averages"),
       value: "averages",
+      papicon: "grades",
       icon: {
         ios: "chart.xyaxis.line",
         android: "ic_averages",
@@ -113,6 +122,7 @@ const GradesView: React.FC = () => {
   // Obtention des périodes
   const [periods, setPeriods] = useState<Period[]>([]);
   const [currentPeriod, setCurrentPeriod] = useState<Period>();
+  const hasAppliedSavedPeriod = useRef(false);
 
   const fetchPeriods = async (managerToUse = manager) => {
     if (currentPeriod || !managerToUse) { return; }
@@ -121,8 +131,8 @@ const GradesView: React.FC = () => {
     const result = await managerToUse.getGradesPeriods();
     let currentPeriodFound = getCurrentPeriod(result);
 
-    if (settings.gradesPeriodId) {
-      const savedPeriod = result.find(p => p.id === settings.gradesPeriodId);
+    if (settings.gradesPeriodName) {
+      const savedPeriod = result.find(p => p.name === settings.gradesPeriodName);
       if (savedPeriod) {
         currentPeriodFound = savedPeriod;
       }
@@ -198,6 +208,28 @@ const GradesView: React.FC = () => {
   useEffect(() => {
     fetchGradesForPeriod(currentPeriod);
   }, [currentPeriod]);
+
+  useEffect(() => {
+    if (hasAppliedSavedPeriod.current || periods.length === 0) {
+      return;
+    }
+
+    hasAppliedSavedPeriod.current = true;
+    if (settings.gradesPeriodName) {
+      const savedPeriodByName = periods.find((period) => period.name === settings.gradesPeriodName);
+      if (savedPeriodByName && savedPeriodByName.id !== currentPeriod?.id) {
+        setCurrentPeriod(savedPeriodByName);
+      }
+    }
+  }, [periods, settings.gradesPeriodName, currentPeriod?.id]);
+
+  useEffect(() => {
+    if (!currentPeriod?.name || settings.gradesPeriodName === currentPeriod.name) {
+      return;
+    }
+
+    mutateSettings('personalization', { gradesPeriodName: currentPeriod.name });
+  }, [currentPeriod?.name, settings.gradesPeriodName, mutateSettings]);
 
   const grades = useMemo(() => {
     return subjects.flatMap((subject) => subject.grades || []);
@@ -295,10 +327,16 @@ const GradesView: React.FC = () => {
     return (
       <ErrorBoundary>
         {/* @ts-expect-error navigation types */}
-        <MemoizedSubjectItem subject={subject} grades={grades} getAvgInfluence={getAvgInfluence} getAvgClassInfluence={getAvgClassInfluence} />
+        <MemoizedSubjectItem
+          subject={subject}
+          grades={grades}
+          getAvgInfluence={getAvgInfluence}
+          getAvgClassInfluence={getAvgClassInfluence}
+          displayScale={displayScale}
+        />
       </ErrorBoundary>
     )
-  }, [grades]);
+  }, [grades, displayScale]);
 
   const keyboardHeight = useKeyboardHeight();
 
@@ -317,39 +355,42 @@ const GradesView: React.FC = () => {
           grades={grades}
           color={colors.primary}
           realAverage={serviceAverage || undefined}
+          displayScale={displayScale}
         />
       </ErrorBoundary>
 
       {serviceRank && (
         <List style={{ marginTop: 8 }}>
-          <Item>
-            <Icon opacity={0.5}>
-              <Papicons name='crown' />
-            </Icon>
+          <List.Item>
+            <List.Leading>
+              <Icon opacity={0.5}>
+                <Papicons name='crown' />
+              </Icon>
+            </List.Leading>
 
-            <Typography variant='title'>
+            <LegacyTypography variant='title'>
               {t('Grades_Tab_Rank')}
-            </Typography>
-            <Typography variant='body1' color='secondary'>
+            </LegacyTypography>
+            <LegacyTypography variant='body1' color='secondary'>
               {t('Grades_Tab_Rank_Description')}
-            </Typography>
+            </LegacyTypography>
 
-            <Trailing>
+            <List.Trailing>
               <Stack
                 direction='horizontal'
                 gap={4}
                 vAlign='end'
                 hAlign='end'
               >
-                <Typography variant='h3' inline color='text'>
+                <LegacyTypography variant='h3' inline color='text'>
                   {serviceRank.value}
-                </Typography>
-                <Typography variant='body1' inline color='secondary'>
+                </LegacyTypography>
+                <LegacyTypography variant='body1' inline color='secondary'>
                   /{serviceRank.outOf}
-                </Typography>
+                </LegacyTypography>
               </Stack>
-            </Trailing>
-          </Item>
+            </List.Trailing>
+          </List.Item>
         </List>
       )}
 
@@ -365,9 +406,9 @@ const GradesView: React.FC = () => {
             <Icon size={20}>
               <Papicons name='star' />
             </Icon>
-            <Typography variant='h6' color='text'>
+            <LegacyTypography variant='h6' color='text'>
               {t('Grades_Tab_Latest')}
-            </Typography>
+            </LegacyTypography>
           </Stack>
 
           <LegendList
@@ -415,7 +456,7 @@ const GradesView: React.FC = () => {
       </Dynamic>
 
       <ErrorBoundary>
-        <FeaturesMap features={features} />
+        <FeaturesMap features={features} displayScale={displayScale} />
       </ErrorBoundary>
 
       <Dynamic animated>
@@ -423,13 +464,26 @@ const GradesView: React.FC = () => {
           <Icon size={20}>
             <Papicons name='grades' />
           </Icon>
-          <Typography variant='h6' color='text'>
+          <LegacyTypography variant='h6' color='text'>
             {t('Grades_Tab_Subjects')}
-          </Typography>
+          </LegacyTypography>
         </Stack>
       </Dynamic>
     </View>
-  ) : null), [sortedGrades, searchText]);
+  ) : null), [
+    sortedGrades,
+    searchText,
+    grades,
+    colors.primary,
+    serviceAverage,
+    serviceRank,
+    navigation,
+    getSubjectById,
+    getAvgInfluence,
+    getAvgClassInfluence,
+    features,
+    displayScale,
+  ]);
 
   return (
     <View
@@ -444,7 +498,7 @@ const GradesView: React.FC = () => {
         onHeightChanged={setHeaderHeight}
         /* Nom de la période */
         title={
-          <MenuView
+          <ActionMenu
             onPressAction={({ nativeEvent }) => {
               const actionId = nativeEvent.event;
 
@@ -453,7 +507,7 @@ const GradesView: React.FC = () => {
                 const newPeriod = periods.find(period => period.id === selectedPeriodId);
                 setCurrentPeriod(newPeriod);
                 if (newPeriod?.id) {
-                  mutateSettings('personalization', { gradesPeriodId: newPeriod.id });
+                  trackAdvancedEvent("grades_period_changed");
                 }
               }
             }}
@@ -485,7 +539,7 @@ const GradesView: React.FC = () => {
               loading={loading}
               chevron={periods.length > 1}
             />
-          </MenuView>
+          </ActionMenu>
         }
         /* Filtres */
         trailing={
@@ -502,6 +556,7 @@ const GradesView: React.FC = () => {
                 id: "sort:" + s.value,
                 title: s.label,
                 state: sortMethod === s.value ? "on" : "off",
+                papicon: s.icon.papicon,
                 image: Platform.select({
                   ios: s.icon.ios,
                   android: s.icon.android,
@@ -520,11 +575,9 @@ const GradesView: React.FC = () => {
       />
 
 
-      <Reanimated.FlatList
-        data={filteredSubjects}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: headerHeight + 12, paddingBottom: bottomTabBarHeight }}
-        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+      <List
+      animated
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: (headerHeight - (Platform.OS === "ios" ? insets.top : 0)) + 12, paddingBottom: Platform.OS === "android" ? 16 : bottomTabBarHeight + 16 }}
 
         scrollEventThrottle={16}
         scrollIndicatorInsets={{ top: headerHeight - insets.top }}
@@ -555,18 +608,35 @@ const GradesView: React.FC = () => {
               <Icon papicon opacity={0.5} size={32} style={{ marginBottom: 3 }}>
                 <Papicons name={"Grades"} />
               </Icon>
-              <Typography variant="h4" color="text" align="center">
+              <LegacyTypography variant="h4" color="text" align="center">
                 {t('Grades_Empty_Title')}
-              </Typography>
-              <Typography variant="body2" color="secondary" align="center">
+              </LegacyTypography>
+              <LegacyTypography variant="body2" color="secondary" align="center">
                 {t('Grades_Empty_Description')}
-              </Typography>
+              </LegacyTypography>
             </Stack>
           </Dynamic>
         }
-      />
+      >
+        {filteredSubjects.map((subject) => (
+          <SubjectItem
+            key={subject.id}
+            subject={subject}
+            grades={grades}
+            getAvgInfluence={getAvgInfluence}
+            getAvgClassInfluence={getAvgClassInfluence}
+            displayScale={displayScale}
+          />
+        ))}
+      </List>
     </View>
   )
 };
 
-export default GradesView;
+const GradesViewWithBoundary = () => (
+  <MainTabErrorBoundary>
+    <GradesView />
+  </MainTabErrorBoundary>
+);
+
+export default GradesViewWithBoundary;

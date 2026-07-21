@@ -1,6 +1,6 @@
 import { Auth } from "@/stores/account/types";
 import { useAccountStore } from "@/stores/account";
-import { loginWithCredentials, refreshOAuthTokenWithUser, User } from "appscho";
+import { loginWithCredentials, refreshOAuthTokenWithUser, User } from "@blockshub/blockscho";
 
 export async function refreshAppSchoAccount(
   accountId: string,

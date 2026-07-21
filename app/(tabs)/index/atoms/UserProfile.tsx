@@ -4,33 +4,35 @@ import { useTheme } from '@react-navigation/native';
 import { LiquidGlassView } from '@sbaiahmed1/react-native-blur';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Dimensions, StyleSheet } from 'react-native';
+import { Dimensions, Platform, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native';
 
+import { initializeAccountManager } from '@/services/shared';
+import { useAccountStore } from '@/stores/account';
+import { useSettingsStore } from '@/stores/settings';
 import Avatar from '@/ui/components/Avatar';
 import Stack from '@/ui/components/Stack';
 import Typography from '@/ui/components/Typography';
 import { runsIOS26 } from '@/ui/utils/IsLiquidGlass';
 
 import { useUserProfileData } from '../hooks/useUserProfileData';
+import { t } from 'i18next';
+import { formatSchoolName } from '@/utils/format/formatSchoolName';
+import ActionMenu from '@/ui/components/ActionMenu';
 
 const UserProfile = ({ subtitle, onPress }: { subtitle?: string, onPress?: () => void }) => {
   const router = useRouter();
-  const { firstName, lastName, level, establishment, initials, profilePicture } = useUserProfileData();
-
+  const { firstName, lastName, initials, profilePicture, level, establishment } = useUserProfileData() ?? {};
+  const accounts = useAccountStore((state) => state.accounts);
+  const lastUsedAccount = useAccountStore((state) => state.lastUsedAccount);
   const theme = useTheme();
 
-  const accountsList = [
-    {
-      firstName,
-      lastName,
-      level,
-      establishment,
-      initials,
-      profilePicture,
-      current: true,
-    },
-  ]
+  const AccountsMenuItems = (accounts && accounts.length > 0) && accounts.map((account) => ({
+    id: account.id,
+    title: account.firstName + ' ' + account.lastName,
+    subtitle: formatSchoolName(account.schoolName ?? ""),
+    state: account.id === lastUsedAccount ? 'on' : 'off',
+  })) || [];
 
   return (
     <Stack inline flex>
@@ -59,29 +61,53 @@ const UserProfile = ({ subtitle, onPress }: { subtitle?: string, onPress?: () =>
         </Pressable>
 
         <UserProfileItemContainer>
-          <MenuView
+          <ActionMenu
+            onPressAction={async ({ nativeEvent }) => {
+              if (nativeEvent.event === "edit") {
+                router.push('/(modals)/profile');
+                return;
+              }
+
+              if (nativeEvent.event === "add") {
+                router.push("/(onboarding)/ageSelection?action=addService");
+                return;
+              }
+
+              const store = useAccountStore.getState();
+              const settingsStore = useSettingsStore.getState();
+              const currentAccountId = store.lastUsedAccount;
+              const currentDisabledTabs = settingsStore.personalization.disabledTabs ?? [];
+              const nextDisabledTabsByAccount = {
+                ...(settingsStore.personalization.disabledTabsByAccount ?? {}),
+                ...(currentAccountId ? { [currentAccountId]: currentDisabledTabs } : {}),
+              };
+              const disabledTabsForAccount = nextDisabledTabsByAccount[nativeEvent.event] ?? [];
+              settingsStore.mutateProperty("personalization", {
+                disabledTabsByAccount: nextDisabledTabsByAccount,
+                disabledTabs: disabledTabsForAccount,
+              });
+              store.setLastUsedAccount(nativeEvent.event);
+              await initializeAccountManager();
+            }}
             actions={[
-              {
+              ...Platform.OS === "ios" ? [{
                 id: 'workspaces',
                 title: '',
                 displayInline: true,
-                subactions: accountsList.map((account) => ({
-                  id: account.id,
-                  title: account.firstName + ' ' + account.lastName,
-                  subtitle: account.establishment,
-                  state: account.current ? 'on' : 'off',
-                })),
-              },
+                subactions: AccountsMenuItems,
+              }] : AccountsMenuItems,
               {
                 id: 'edit',
-                title: 'Edit profile',
+                title: t('Home_Edit_Profile'),
                 image: 'person.crop.circle',
+                papicon: 'user',
                 imageColor: theme.colors.text,
               },
               {
                 id: 'add',
-                title: 'Add account',
+                title: t('Home_Add_Profile'),
                 image: 'plus',
+                papicon: 'add',
                 imageColor: theme.colors.text,
               },
             ]}
@@ -89,7 +115,7 @@ const UserProfile = ({ subtitle, onPress }: { subtitle?: string, onPress?: () =>
             <Stack direction="vertical" vAlign="center" gap={0} style={{ height: 42, paddingHorizontal: 12 }}>
               <Stack direction="horizontal" hAlign="center" gap={6}>
                 <Typography nowrap color='white' variant='navigation' weight='bold' style={{ maxWidth: Dimensions.get('window').width - 230 }}>
-                  {firstName} {lastName}
+                  {firstName && lastName ? `${firstName} ${lastName}` : "Mon compte"}
                 </Typography>
                 <Papicons name="chevrondown" size={20} color="white" opacity={0.5} style={{ marginRight: 0 }} />
               </Stack>
@@ -99,7 +125,7 @@ const UserProfile = ({ subtitle, onPress }: { subtitle?: string, onPress?: () =>
                 </Typography>
               }
             </Stack>
-          </MenuView>
+          </ActionMenu>
         </UserProfileItemContainer>
       </Stack>
     </Stack>
@@ -126,7 +152,7 @@ const UserProfileItemContainer = ({ children }: { children: React.ReactNode }) =
 
 
   return (
-    <Stack backgroundColor="#FFFFFF40" radius={300}>
+    <Stack style={{ marginRight: -8 }}>
       {children}
     </Stack>
   )

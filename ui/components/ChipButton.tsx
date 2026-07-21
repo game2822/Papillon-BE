@@ -3,7 +3,7 @@ import { MenuAction, MenuView } from '@react-native-menu/menu';
 import { useTheme } from "@react-navigation/native";
 import { LiquidGlassView } from '@sbaiahmed1/react-native-blur';
 import React from "react";
-import { Pressable, TouchableOpacity } from "react-native";
+import { Platform, Pressable, TouchableNativeFeedback, TouchableOpacity, View } from "react-native";
 
 import { runsIOS26 } from "../utils/IsLiquidGlass";
 import { PapillonAppearIn, PapillonAppearOut } from "../utils/Transition";
@@ -11,6 +11,7 @@ import { Dynamic } from "./Dynamic";
 import Icon from "./Icon";
 import Stack from "./Stack";
 import Typography from "./Typography";
+import ActionMenu from "./ActionMenu";
 
 const ChipButton: React.FC<React.PropsWithChildren<{
   onPress?: () => void;
@@ -43,7 +44,7 @@ const ChipButton: React.FC<React.PropsWithChildren<{
         ]}
       >
         <Pressable onPress={onPress}>
-          <MenuView onPressAction={onPressAction} actions={actions}>
+          <ActionMenu onPressAction={onPressAction} actions={actions}>
             <Stack animated direction="horizontal" hAlign="center" gap={8} padding={single ? 0 : [12, 6]} radius={200} inline vAlign="center">
               {icon &&
                 <Dynamic animated>
@@ -69,19 +70,22 @@ const ChipButton: React.FC<React.PropsWithChildren<{
                 </Dynamic>
               }
             </Stack>
-          </MenuView>
+          </ActionMenu>
         </Pressable>
       </LiquidGlassView>
     );
   }
 
   return (
-    <TouchableOpacity
+    <FallBackTouchable
       style={[
         {
           borderRadius: 300,
           zIndex: 999999,
-          backgroundColor: colors.text + "16"
+          backgroundColor: colors.card,
+          borderWidth: Platform.OS === "android" ? 0 : 1,
+          borderColor: colors.border,
+          overflow: 'hidden',
         },
         single && {
           width: 46,
@@ -90,10 +94,13 @@ const ChipButton: React.FC<React.PropsWithChildren<{
           alignItems: "center",
         }
       ]}
+      contentContainerStyle={{
+        borderRadius: 300,
+        overflow: 'hidden',
+      }}
       onPress={onPress}
-      activeOpacity={0.5}
     >
-      <MenuView onPressAction={onPressAction} actions={actions}>
+      <ActionMenu onPressAction={onPressAction} actions={actions}>
         <Stack animated direction="horizontal" hAlign="center" gap={8} padding={single ? 0 : [12, 6]} radius={200} inline vAlign="center">
           {icon &&
             <Dynamic animated>
@@ -119,10 +126,30 @@ const ChipButton: React.FC<React.PropsWithChildren<{
             </Dynamic>
           }
         </Stack>
-      </MenuView>
-    </TouchableOpacity>
+      </ActionMenu>
+    </FallBackTouchable>
   );
 
+}
+
+const FallBackTouchable = ({ ...props }: React.ComponentProps<typeof TouchableOpacity>) => {
+  if(Platform.OS === 'android') {
+    return (
+      <TouchableNativeFeedback
+        onPress={props.onPress}
+        useForeground
+        style={props.contentContainerStyle}
+      >
+        <View {...props}>
+          {props.children}
+        </View>
+      </TouchableNativeFeedback>
+    );
+  }
+
+  return (
+    <TouchableOpacity activeOpacity={0.5} {...props} />
+  )
 }
 
 export default ChipButton;

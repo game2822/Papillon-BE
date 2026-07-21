@@ -1,13 +1,14 @@
 import { Stack } from "expo-router";
 import React from "react";
-import { useTranslation } from "react-i18next";
 import { Platform, StatusBar } from "react-native";
 
 import { runsIOS26 } from "@/ui/utils/IsLiquidGlass";
-import { screenOptions } from "@/utils/theme/ScreenOptions";
+import { useScreenOptions } from "@/utils/theme/ScreenOptions";
+import { t } from "i18next";
+import AndroidHeaderBackground from "@/components/AndroidHeaderBackground";
 
 export default function Layout() {
-  const { t } = useTranslation();
+  const screenOptions = useScreenOptions();
 
   const newScreenOptions = React.useMemo(() => ({
     ...screenOptions,
@@ -15,16 +16,19 @@ export default function Layout() {
     headerLargeTitle: false,
     headerTransparent: runsIOS26,
     headerShadowVisible: false,
-  }), []);
+    headerBackground: AndroidHeaderBackground
+  }), [screenOptions]);
 
   return (
     <>
-      <StatusBar barStyle="light-content" animated />
+      {Platform.OS === "ios" && <StatusBar barStyle="light-content" animated />}
       <Stack screenOptions={newScreenOptions}>
         <Stack.Screen
-          name="index"
+          name="settings"
           options={{
             headerTitle: t("Tab_Settings"),
+            headerBackground: AndroidHeaderBackground,
+            headerTransparent: true
           }}
         />
 
@@ -49,6 +53,7 @@ export default function Layout() {
             headerBackButtonDisplayMode: "minimal",
             headerTransparent: true,
             headerLargeTitle: false,
+            headerBackground: null
           }}
         />
 
@@ -59,7 +64,7 @@ export default function Layout() {
             headerTitle: t("Settings_Cards_Title"),
             headerLargeTitle: false,
             headerBackButtonDisplayMode: "minimal",
-            gestureEnabled: true
+            gestureEnabled: true,
           }}
         />
         <Stack.Screen
@@ -68,6 +73,15 @@ export default function Layout() {
             headerTitle: t("Settings_About_Title"),
             headerBackButtonDisplayMode: "minimal",
             headerTransparent: Platform.OS === "ios",
+            headerLargeTitle: false,
+          }}
+        />
+        <Stack.Screen
+          name="contributors"
+          options={{
+            headerTitle: "Contributors",
+            headerBackButtonDisplayMode: "minimal",
+            headerTransparent: false,
             headerLargeTitle: false,
           }}
         />
@@ -106,14 +120,29 @@ export default function Layout() {
             headerShown: false,
             presentation: "modal",
             contentStyle: {
-              borderRadius: Platform.OS === 'ios' ? 30 : 0,
-            }
+              borderRadius: Platform.OS === "ios" ? 30 : 0,
+            },
           }}
         />
         <Stack.Screen
           name="language"
           options={{
             headerTitle: t("Settings_Language_Title"),
+            headerBackButtonDisplayMode: "minimal",
+            headerTransparent: false,
+            headerLargeTitle: false,
+          }}
+        />
+        <Stack.Screen
+          name="transport"
+          options={{
+            headerTitle: t("Settings_Transport_Title"),
+          }}
+        />
+        <Stack.Screen
+          name="features"
+          options={{
+            headerTitle: t("Settings_Features_Title"),
             headerBackButtonDisplayMode: "minimal",
             headerTransparent: false,
             headerLargeTitle: false,

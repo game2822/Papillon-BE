@@ -1,20 +1,32 @@
 import { router } from 'expo-router';
+import { t } from 'i18next';
 import { instance } from 'pawnote';
 import { useCallback, useEffect } from 'react';
 
 import { getWeekNumberFromDate } from '@/database/useHomework';
 import { AuthenticationError } from '@/services/errors/AuthenticationError';
 import { getManager, initializeAccountManager } from "@/services/shared";
-import { Grade, Period } from '@/services/shared/grade';
 import { Services } from '@/stores/account/types';
 import { useSettingsStore } from '@/stores/settings';
 import { useAlert } from '@/ui/components/AlertProvider';
 import { getCurrentPeriod } from '@/utils/grades/helper/period';
 import { log, warn } from '@/utils/logger/logger';
+import { useAccountStore } from '@/stores/account';
+
+const REMOVED_SERVICE_ID = 9;
+
+const HOME_SYNC_TTL_MS = 5 * 60 * 1000;
+const homeSyncState = new Map<
+  string,
+  { lastSyncedAt: number; inFlight: Promise<void> | null }
+>();
 
 export const useHomeData = () => {
   const alert = useAlert();
   const settingsstore = useSettingsStore(state => state.personalization);
+  const lastUsedAccount = useAccountStore(state => state.lastUsedAccount);
+  const accounts = useAccountStore(state => state.accounts);
+  const removeAccount = useAccountStore(state => state.removeAccount);
 
   const fetchEDT = useCallback(async () => {
     const manager = getManager();
@@ -30,33 +42,66 @@ export const useHomeData = () => {
       return;
     }
     const gradePeriods = await manager.getGradesPeriods();
-    const validPeriods: Period[] = [];
-    const date = new Date().getTime();
-    for (const period of gradePeriods) {
-      if (period.start.getTime() > date && period.end.getTime() > date) {
-        validPeriods.push(period);
-      }
-    }
-
-    const grades: Grade[] = [];
-    const currentPeriod = getCurrentPeriod(validPeriods);
+    const currentPeriod = getCurrentPeriod(gradePeriods);
 
     if (currentPeriod) {
-      const periodGrades = await manager.getGradesForPeriod(currentPeriod, currentPeriod.createdByAccount);
-      periodGrades.subjects.forEach(subject => {
-        subject.grades.forEach(grade => {
-          grades.push(grade);
-        });
-      });
+      await manager.getGradesForPeriod(currentPeriod, currentPeriod.createdByAccount);
     }
   }, []);
 
   const initialize = useCallback(async () => {
+    if (!lastUsedAccount) {
+      return;
+    }
+
+    const currentAccount = accounts.find(acc => acc.id === lastUsedAccount);
+    const usesRemovedService = currentAccount?.services.some(
+      service => (service.serviceId as number) === REMOVED_SERVICE_ID
+    );
+    if (currentAccount && usesRemovedService) {
+      warn(`Account ${currentAccount.id} uses a removed service, disconnecting.`);
+
+      alert.showAlert({
+        title: t("SERVICE_REMOVED_TITLE"),
+        description: t("SERVICE_REMOVED_DESCRIPTION"),
+        icon: "Trash",
+        color: "#D60046",
+        delay: 8000,
+      });
+
+      const remainingAccounts = accounts.filter(acc => acc.id !== currentAccount.id);
+      removeAccount(currentAccount);
+
+      if (remainingAccounts.length === 0) {
+        router.replace("/(onboarding)/welcome");
+      }
+
+      return;
+    }
+
+    const state =
+      homeSyncState.get(lastUsedAccount) ?? {
+        lastSyncedAt: 0,
+        inFlight: null,
+      };
+    homeSyncState.set(lastUsedAccount, state);
+
+    if (state.inFlight) {
+      await state.inFlight;
+      return;
+    }
+
+    if (Date.now() - state.lastSyncedAt < HOME_SYNC_TTL_MS) {
+      return;
+    }
+
+    state.inFlight = (async () => {
     try {
-      await initializeAccountManager();
+      await initializeAccountManager(lastUsedAccount);
       log("Refreshed Manager received");
 
       await Promise.all([fetchEDT(), fetchGrades()]);
+      state.lastSyncedAt = Date.now();
 
       if (settingsstore.showAlertAtLogin) {
         alert.showAlert({
@@ -76,9 +121,10 @@ export const useHomeData = () => {
         const serviceId = error?.service?.id ?? undefined;
 
         alert.showAlert({
-          title: "Connexion impossible",
+          title: "Vous avez été déconnecté",
+          message: instanceURL ? `En savoir plus et se reconnecter` : "En savoir plus",
           description: "Il semblerait que ta session a expiré. Tu pourras renouveler ta session dans les paramètres en liant à nouveau ton compte.",
-          icon: "TriangleAlert",
+          icon: "UserCross",
           color: "#D60046",
           customButton: instanceURL ? {
             label: "Me reconnecter",
@@ -87,14 +133,17 @@ export const useHomeData = () => {
               const authUrl = instanceURL;
               const instanceInfo = await instance(authUrl as string);
 
-              if (instanceInfo && instanceInfo.casToken && instanceInfo.casURL) {
+              if (instanceInfo && instanceInfo.name) {
                 return setTimeout(() => {
-                  router.push({ pathname: "/(onboarding)/pronote/webview", params: { url: authUrl, serviceId } })
-                }, 200)
+                  router.navigate("/(onboarding)/ageSelection");
+                  setTimeout(() => {
+                  router.navigate({ pathname: "/(onboarding)/services/pronote/browser", params: { url: authUrl, school: instanceInfo.name } })
+                }, 400)
+                }, 100)
               }
 
               setTimeout(() => {
-                router.push({ pathname: "/(onboarding)/pronote/credentials", params: { url: authUrl, serviceId } })
+                router.navigate({ pathname: "/(onboarding)/services/pronote/browser", params: { url: authUrl, school: "N/A" } })
               }, 200)
             }
           } : undefined,
@@ -102,7 +151,14 @@ export const useHomeData = () => {
         })
       }
     }
-  }, [alert, fetchEDT, fetchGrades, settingsstore.showAlertAtLogin]);
+    })();
+
+    try {
+      await state.inFlight;
+    } finally {
+      state.inFlight = null;
+    }
+  }, [alert, fetchEDT, fetchGrades, settingsstore.showAlertAtLogin, lastUsedAccount, accounts, removeAccount]);
 
   useEffect(() => {
     initialize();

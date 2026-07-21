@@ -1,6 +1,6 @@
 import { Auth } from "@/stores/account/types";
 import { Balance } from "../shared/balance";
-import { Client } from "pawrd";
+import { Client } from "@blockshub/blocksrd";
 
 export async function fetchArdBalance(
   session: Client,
