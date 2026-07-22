@@ -18,12 +18,6 @@ export default {
          }
        },
     userInterfaceStyle: "automatic",
-    newArchEnabled: true,
-    splash: {
-      image: "./assets/images/splash.png",
-      resizeMode: "cover",
-      backgroundColor: "#003A21",
-    },
     ios: {
       appStoreUrl:
         "https://apps.apple.com/us/app/papillon-lappli-scolaire/id6477761165",
@@ -99,11 +93,6 @@ export default {
         monochromeImage: "./assets/images/monochrome-icon.png",
       },
       edgeToEdgeEnabled: true,
-      splash: {
-        image: "./assets/images/splash_android.png",
-        resizeMode: "cover",
-        backgroundColor: "#003A21",
-      },
       supportsTablet: true,
       predictiveBackGestureEnabled: true
     },
@@ -113,13 +102,23 @@ export default {
       favicon: "./assets/images/favicon.png",
     },
     plugins: [
+      "expo-ios-scene-lifecycle-plugin",
       "expo-router",
+      "expo-status-bar",
       "expo-font",
       "expo-video",
       "expo-audio",
       "expo-localization",
       "expo-asset",
       "@react-native-community/datetimepicker",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#29947A",
+          "image": "./assets/images/logotype.png",
+          "imageWidth": 240
+        }
+      ],
       [
         "expo-image-picker",
         {
@@ -166,6 +165,7 @@ export default {
               { name: "SDWebImage", modular_headers: true },
               { name: "SDWebImageSVGCoder", modular_headers: true },
             ],
+            buildReactNativeFromSource: false
           },
         },
       ],

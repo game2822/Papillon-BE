@@ -17,7 +17,7 @@ import { Papicons } from '@getpapillon/papicons';
 import HomeHeaderButton, { HomeHeaderButtonItem } from '../components/HomeHeaderButton';
 import { useHomeHeaderData } from '../hooks/useHomeHeaderData';
 import WrappedBanner from './WrappedBanner';
-import { useTheme } from '@react-navigation/native';
+import { useTheme } from "expo-router/react-navigation";
 import AnimatedPressable from '@/ui/components/AnimatedPressable';
 import { PapillonAppearIn, PapillonAppearOut } from '@/ui/utils/Transition';
 import { ListTouchable } from '@/ui/new/List';
@@ -32,6 +32,9 @@ const HomeHeader = () => {
   const mutateProperty = useSettingsStore(state => state.mutateProperty);
   const currentVersion = packageJson.version;
   const releaseNotesUrl = `https://papillon.bzh/release-notes/${currentVersion}`;
+  const currentAttendancePeriod = attendancesPeriods.length > 0
+    ? getCurrentPeriod(attendancesPeriods)
+    : undefined;
 
   useEffect(() => {
     const installedVersion = settingsStore.installedVersion;
@@ -78,11 +81,15 @@ const HomeHeader = () => {
         (absencesCount > 1 ? t("Home_Attendance_Button_Description_Number", { number: absencesCount }) : t("Home_Attendance_Button_Description_Singular"))
         : t("Home_Attendance_Button_Description_None"),
       onPress: () => {
+        if (!currentAttendancePeriod) {
+          return;
+        }
+
         router.push({
           pathname: "/(features)/attendance",
           params: {
             periods: JSON.stringify(attendancesPeriods),
-            currentPeriod: JSON.stringify(getCurrentPeriod(attendancesPeriods)),
+            currentPeriod: JSON.stringify(currentAttendancePeriod),
             attendances: JSON.stringify(attendances),
           },
         });
@@ -99,7 +106,7 @@ const HomeHeader = () => {
         router.push("/(features)/soon");
       }
     }
-  ], [availableCanteenCards, absencesCount, chats, attendancesPeriods, attendances, t]);
+  ], [availableCanteenCards, absencesCount, chats, currentAttendancePeriod, attendancesPeriods, attendances, t]);
 
   return (
     <View style={{ paddingHorizontal: 0, width: "100%", flex: 1 }}>
@@ -121,17 +128,17 @@ const HomeHeader = () => {
       </LiquidGlassContainer>
 
       {showReleaseNotesBanner && (
-
-        <Stack card style={{ marginTop: 12, elevation: 2, backgroundColor: (!theme.dark && Platform.OS === 'android') ? '#FFF' : theme.colors.item, overflow: Platform.OS === 'android' ? 'hidden' : 'visible' }} padding={0}>
-          <ListTouchable
-            onPress={() =>
-              WebBrowser.openBrowserAsync(releaseNotesUrl, {
-                presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-              })
-            }>
+        <ListTouchable
+          onPress={() =>
+            WebBrowser.openBrowserAsync(releaseNotesUrl, {
+              presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+            })
+          }
+        >
+          <Stack card style={{ marginTop: 12, elevation: 2, backgroundColor: (!theme.dark && Platform.OS === 'android') ? '#FFF' : theme.colors.item, overflow: Platform.OS === 'android' ? 'hidden' : 'visible' }} padding={0}>
             <Stack padding={[12, 10]} gap={8} direction='horizontal'>
               <Papicons name="sparkles" size={24} color={colors.tint} />
-
+              
               <Stack inline flex style={{ marginRight: 32 }}>
                 <Typography variant='title'>
                   {t("Home_Release_Notes_Banner", { version: currentVersion })}
@@ -140,7 +147,7 @@ const HomeHeader = () => {
                   {t("Home_Release_Notes_Banner_Description")}
                 </Typography>
               </Stack>
-
+              
               <ListTouchable
                 hitSlop={10}
                 onPress={(event) => {
@@ -149,15 +156,16 @@ const HomeHeader = () => {
                 }}
               >
                 <View 
-                style={{ width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: colors.text + '11', position: "absolute", top: 10, right: 12 }}>
-                <Icon size={16}>
-                <Papicons name="Cross" />
-                </Icon>
+                  style={{ width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: colors.text + '11', position: "absolute", right: 0 }}
+                >
+                  <Icon size={16}>
+                    < Papicons name="Cross" />
+                  </Icon>
                 </View>
               </ListTouchable>
             </Stack>
-          </ListTouchable>
-        </Stack>
+          </Stack>
+        </ListTouchable>
       )}
 
       {__DEV__ && 1 === 2 && (
