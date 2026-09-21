@@ -1,35 +1,38 @@
 import { router } from 'expo-router';
 import { t } from 'i18next';
-import { instance } from 'pawnote';
+import { instance } from "@blockshub/pawnote-lts";
 import { useCallback, useEffect } from 'react';
 
 import { getWeekNumberFromDate } from '@/database/useHomework';
 import { AuthenticationError } from '@/services/errors/AuthenticationError';
+import { SecurityChallengeError } from '@/services/errors/SecurityChallengeError';
+import { ServiceUnavailableError } from '@/services/errors/ServiceUnavailableError';
 import { getManager, initializeAccountManager } from "@/services/shared";
 import { Services } from '@/stores/account/types';
 import { useSettingsStore } from '@/stores/settings';
 import { useAlert } from '@/ui/components/AlertProvider';
 import { getCurrentPeriod } from '@/utils/grades/helper/period';
-import { log, warn } from '@/utils/logger/logger';
+import { debug, warn } from '@/utils/logger/logger';
+import { setPendingPronoteChallenge } from '@/utils/pronote/challenge';
 import { useAccountStore } from '@/stores/account';
 
 const REMOVED_SERVICE_ID = 9;
 
 const HOME_SYNC_TTL_MS = 5 * 60 * 1000;
-const homeSyncState = new Map<
-  string,
-  { lastSyncedAt: number; inFlight: Promise<void> | null }
->();
+const lastHomeSync = new Map<string, number>();
 
 export const useHomeData = () => {
   const alert = useAlert();
   const settingsstore = useSettingsStore(state => state.personalization);
   const lastUsedAccount = useAccountStore(state => state.lastUsedAccount);
-  const accounts = useAccountStore(state => state.accounts);
   const removeAccount = useAccountStore(state => state.removeAccount);
 
   const fetchEDT = useCallback(async () => {
     const manager = getManager();
+    if (!manager) {
+      warn('Manager is null, skipping timetable fetch');
+      return;
+    }
     const date = new Date();
     const weekNumber = getWeekNumberFromDate(date);
     await manager.getWeeklyTimetable(weekNumber, date);
@@ -54,6 +57,7 @@ export const useHomeData = () => {
       return;
     }
 
+    const accounts = useAccountStore.getState().accounts;
     const currentAccount = accounts.find(acc => acc.id === lastUsedAccount);
     const usesRemovedService = currentAccount?.services.some(
       service => (service.serviceId as number) === REMOVED_SERVICE_ID
@@ -79,29 +83,16 @@ export const useHomeData = () => {
       return;
     }
 
-    const state =
-      homeSyncState.get(lastUsedAccount) ?? {
-        lastSyncedAt: 0,
-        inFlight: null,
-      };
-    homeSyncState.set(lastUsedAccount, state);
-
-    if (state.inFlight) {
-      await state.inFlight;
+    if (Date.now() - (lastHomeSync.get(lastUsedAccount) ?? 0) < HOME_SYNC_TTL_MS) {
       return;
     }
 
-    if (Date.now() - state.lastSyncedAt < HOME_SYNC_TTL_MS) {
-      return;
-    }
-
-    state.inFlight = (async () => {
     try {
       await initializeAccountManager(lastUsedAccount);
-      log("Refreshed Manager received");
+      debug("Refreshed Manager received");
 
       await Promise.all([fetchEDT(), fetchGrades()]);
-      state.lastSyncedAt = Date.now();
+      lastHomeSync.set(lastUsedAccount, Date.now());
 
       if (settingsstore.showAlertAtLogin) {
         alert.showAlert({
@@ -116,9 +107,58 @@ export const useHomeData = () => {
 
     } catch (error) {
       if (String(error).includes("Unable to find")) { return; }
+
+      if (error instanceof SecurityChallengeError) {
+        const handle = error.securityError.handle;
+
+        if (!handle.shouldCustomPassword && !handle.shouldCustomDoubleAuth) {
+          const ownerAccount = useAccountStore.getState().accounts.find(acc =>
+            acc.services.some(s => s.id === error.service?.id)
+          );
+
+          setPendingPronoteChallenge({
+            session: error.session,
+            error: error.securityError,
+            deviceUUID: error.deviceUUID,
+            relinkAccountId: ownerAccount?.id,
+            relinkServiceId: error.service?.id,
+          });
+
+          return router.navigate("/(onboarding)/services/pronote/challenge");
+        }
+
+        const instanceURL = error.service?.auth?.additionals?.["instanceURL"] ?? "";
+        const ownerAccount = useAccountStore.getState().accounts.find(acc =>
+          acc.services.some(s => s.id === error.service?.id)
+        );
+
+        return alert.showAlert({
+          title: "Vérification de sécurité requise",
+          description: "Pronote demande de reconfigurer la sécurité de ton compte. Reconnecte-toi pour continuer.",
+          icon: "UserCross",
+          color: "#D60046",
+          customButton: instanceURL ? {
+            label: "Me reconnecter",
+            showCancelButton: true,
+            onPress: () => {
+              router.navigate({
+                pathname: "/(onboarding)/services/pronote/browser",
+                params: {
+                  url: instanceURL,
+                  school: "N/A",
+                  relinkAccountId: ownerAccount?.id,
+                  relinkServiceId: error.service?.id,
+                  relinkDeviceUUID: error.deviceUUID,
+                }
+              });
+            }
+          } : undefined,
+          technical: error.message
+        });
+      }
+
       if (error instanceof AuthenticationError) {
         const instanceURL = error?.service?.auth?.additionals?.["instanceURL"] ?? "";
-        const serviceId = error?.service?.id ?? undefined;
 
         alert.showAlert({
           title: "Vous avez été déconnecté",
@@ -130,35 +170,53 @@ export const useHomeData = () => {
             label: "Me reconnecter",
             showCancelButton: error.service.serviceId === Services.PRONOTE,
             onPress: async () => {
+              const ownerAccount = useAccountStore.getState().accounts.find(acc =>
+                acc.services.some(s => s.id === error.service.id)
+              );
+
               const authUrl = instanceURL;
-              const instanceInfo = await instance(authUrl as string);
+              const relinkParams = {
+                url: authUrl,
+                relinkAccountId: ownerAccount?.id,
+                relinkServiceId: error.service.id,
+                relinkDeviceUUID: String(error.service.auth?.additionals?.["deviceUUID"] ?? ""),
+              };
 
-              if (instanceInfo && instanceInfo.name) {
-                return setTimeout(() => {
-                  router.navigate("/(onboarding)/ageSelection");
-                  setTimeout(() => {
-                  router.navigate({ pathname: "/(onboarding)/services/pronote/browser", params: { url: authUrl, school: instanceInfo.name } })
-                }, 400)
-                }, 100)
-              }
+              const instanceInfo = await instance(authUrl as string).catch(() => null);
 
-              setTimeout(() => {
-                router.navigate({ pathname: "/(onboarding)/services/pronote/browser", params: { url: authUrl, school: "N/A" } })
+              return setTimeout(() => {
+                router.navigate({
+                  pathname: "/(onboarding)/services/pronote/browser",
+                  params: { ...relinkParams, school: instanceInfo?.name ?? "N/A" }
+                })
               }, 200)
             }
           } : undefined,
           technical: error.message
         })
+      } else if (error instanceof ServiceUnavailableError) {
+        alert.showAlert({
+          title: t("home.unavailable.title", "Pronote temporairement indisponible"),
+          description: t("home.unavailable.description", "Impossible de contacter Pronote pour le moment. Les données affichées correspondent à la dernière synchronisation."),
+          icon: "GlobeCross",
+          color: "#FF8C00",
+          withoutNavbar: true,
+        });
+      } else if (!(error instanceof SecurityChallengeError)) {
+        // Anything left is unexpected. Saying so beats a home screen that
+        // silently keeps showing the last synchronisation.
+        warn(String(error), "useHomeData");
+        alert.showAlert({
+          title: "Synchronisation impossible",
+          description: "Nous n'avons pas réussi à mettre à jour tes données. Vérifie ta connexion, puis tire la page vers le bas pour réessayer.",
+          icon: "GlobeCross",
+          color: "#D60046",
+          withoutNavbar: true,
+          technical: String(error),
+        });
       }
     }
-    })();
-
-    try {
-      await state.inFlight;
-    } finally {
-      state.inFlight = null;
-    }
-  }, [alert, fetchEDT, fetchGrades, settingsstore.showAlertAtLogin, lastUsedAccount, accounts, removeAccount]);
+  }, [alert, fetchEDT, fetchGrades, settingsstore.showAlertAtLogin, lastUsedAccount, removeAccount]);
 
   useEffect(() => {
     initialize();

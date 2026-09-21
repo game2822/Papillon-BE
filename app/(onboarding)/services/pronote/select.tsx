@@ -1,6 +1,6 @@
 import { useHeaderHeight, useRoute, useTheme } from "expo-router/react-navigation";
 import { useNavigation } from "expo-router";
-import { geolocation } from "pawnote";
+import { geolocation } from "@blockshub/pawnote-lts";
 import React, { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, KeyboardAvoidingView, Platform } from "react-native";
@@ -85,7 +85,7 @@ export default function PronoteLoginSelectEtab() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.select({ android: 0, default: 20 })}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.overground }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.select({ android: 0, default: 20 })}>
       <List
         animated
         ListHeaderComponent={<PronoteSearchHeader search={search} setSearch={setSearch} loading={loading} t={t} />}
@@ -99,7 +99,7 @@ export default function PronoteLoginSelectEtab() {
         style={{ flex: 1 }}
       >
 
-        {filteredSchools.map((school, i) => (
+        {filteredSchools.map((school) => (
           <List.Item animated={true} id={school.url} key={school.url} onPress={() => selectSchool(school)}>
             <List.Leading>
               <Image

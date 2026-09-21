@@ -29,6 +29,8 @@ export interface AccountsStorage {
     subjects: Record<string, { color: string; emoji: string; name: string }>
   ) => void;
   setAccountProfilePicture: (accountId: string, profilePicture: string) => void;
+  recordTeamModalHomeLaunch: (accountId: string) => boolean;
+  dismissTeamWidget: (accountId: string) => void;
   setTransportEnabled: (transportEnabled: boolean) => void;
   setTransportService: (id: string) => void;
   setTransportHomeAddress: (address: TransportAddress) => void;
@@ -42,6 +44,7 @@ export interface AccountsStorage {
  * @property {string} id - Unique identifier for the account (read-only).
  * @property {string} firstName - The user's first name.
  * @property {string} lastName - The user's last name.
+ * @property {boolean} [custom] - Whether the account was created without an associated service.
  * @property {string} [schoolName] - (Optional) The name of the user's school.
  * @property {ServiceAccount[]} services - List of service accounts associated with this account.
  * @property {string} createdAt - ISO string representing the account creation date (stored as string due to MMKV limitations).
@@ -51,13 +54,21 @@ export interface Account {
   readonly id: string;
   firstName: string;
   lastName: string;
+  custom?: boolean;
   schoolName?: string;
   className?: string;
   customisation?: CustomisationStorage;
+  teamModal?: TeamModalStorage;
   transport?: TransportStorage;
   services: ServiceAccount[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TeamModalStorage {
+  homeLaunchCount: number;
+  shown: boolean;
+  widgetDismissed?: boolean;
 }
 
 export interface CustomisableSubject {
@@ -129,4 +140,5 @@ export enum Services {
   MULTI,
   ALISE,
   APPSCHO,
+  MOCK_DATA = 10,
 }

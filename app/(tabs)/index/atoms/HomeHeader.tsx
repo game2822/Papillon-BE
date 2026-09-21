@@ -16,7 +16,6 @@ import { Papicons } from '@getpapillon/papicons';
 
 import HomeHeaderButton, { HomeHeaderButtonItem } from '../components/HomeHeaderButton';
 import { useHomeHeaderData } from '../hooks/useHomeHeaderData';
-import WrappedBanner from './WrappedBanner';
 import { useTheme } from "expo-router/react-navigation";
 import AnimatedPressable from '@/ui/components/AnimatedPressable';
 import { PapillonAppearIn, PapillonAppearOut } from '@/ui/utils/Transition';
@@ -27,7 +26,7 @@ const HomeHeader = () => {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { colors } = theme;
-  const { availableCanteenCards, attendancesPeriods, attendances, absencesCount, chats } = useHomeHeaderData();
+  const { availableCanteenCards, attendancesPeriods, attendances, absencesCount, news } = useHomeHeaderData();
   const settingsStore = useSettingsStore(state => state.personalization);
   const mutateProperty = useSettingsStore(state => state.mutateProperty);
   const currentVersion = packageJson.version;
@@ -55,28 +54,33 @@ const HomeHeader = () => {
   const HomeHeaderButtons: HomeHeaderButtonItem[] = useMemo(() => [
     {
       title: t("Home_Cards_Button_Title"),
+      image: require("@/assets/shaded_icons/cards.png"),
       icon: "card",
-      color: "#EE9F00",
+      color: "#c800ad",
       description: availableCanteenCards.length > 0 ?
         (availableCanteenCards.length > 1 ? t("Home_Cards_Button_Description_Number", { number: availableCanteenCards.length }) :
           t("Home_Cards_Button_Description_Singular")) : t("Home_Cards_Button_Description_None"),
       onPress: () => {
         router.push("/(features)/(cards)/cards");
-      }
+      },
+      route: "/(features)/(cards)/cards"
     },
     {
       title: t("Home_Menu_Button_Title"),
+      image: require("@/assets/shaded_icons/menu.png"),
       icon: "cutlery",
-      color: "#7ED62B",
+      color: "#46c700",
       description: t("Home_Menu_Button_Description"),
       onPress: () => {
         router.push("/(features)/soon");
-      }
+      },
+      route: "/(features)/soon"
     },
     {
       title: t("Home_Attendance_Title"),
+      image: require("@/assets/shaded_icons/homework.png"),
       icon: "chair",
-      color: "#D62B94",
+      color: "#ffae00",
       description: absencesCount > 0 ?
         (absencesCount > 1 ? t("Home_Attendance_Button_Description_Number", { number: absencesCount }) : t("Home_Attendance_Button_Description_Singular"))
         : t("Home_Attendance_Button_Description_None"),
@@ -93,32 +97,40 @@ const HomeHeader = () => {
             attendances: JSON.stringify(attendances),
           },
         });
-      }
+      },
+      route: "/(features)/attendance",
+      params: {
+        periods: JSON.stringify(attendancesPeriods),
+        currentPeriod: JSON.stringify(currentAttendancePeriod),
+        attendances: JSON.stringify(attendances),
+      },
     },
     {
-      title: t("Home_Chats_Button_Title"),
-      icon: "textbubble",
-      color: "#2B7ED6",
-      description: chats.length > 0 ?
-        (chats.length > 1 ? t("Home_Chats_Button_Description_Number", { number: chats.length }) : t("Home_Chats_Button_Description_Singular"))
-        : t("Home_Chats_Button_Description_None"),
+      title: t("Tab_News"),
+      image: require("@/assets/shaded_icons/actu.png"),
+      icon: "newspaper",
+      color: "#0080ff",
+      description: news[0]?.title ?? t("News_Empty_Title"),
       onPress: () => {
-        router.push("/(features)/soon");
-      }
+        router.push("/(features)/(news)/news");
+      },
+      route: "/(features)/(news)/news"
     }
-  ], [availableCanteenCards, absencesCount, chats, currentAttendancePeriod, attendancesPeriods, attendances, t]);
+  ], [availableCanteenCards, absencesCount, news, currentAttendancePeriod, attendancesPeriods, attendances, t]);
 
   return (
-    <View style={{ paddingHorizontal: 0, width: "100%", flex: 1 }}>
+    <View style={{ paddingHorizontal: 0, width: "100%", flex: 1, overflow: "visible" }}>
       <View style={{ height: insets.top + 56 }} />
-      <LiquidGlassContainer>
-        <Stack inline flex width={"100%"}>
-          <View style={{ width: '100%', gap: 6 }}>
+      <LiquidGlassContainer spacing={8} style={{ overflow: "visible" }}>
+        <Stack inline flex width={"100%"} style={{ overflow: "visible" }}>
+          <View style={{ width: '100%', gap: 6, overflow: "visible" }}>
             {Array.from({ length: Math.ceil(HomeHeaderButtons.length / 2) }).map((_, i) => (
 
               <View key={i} style={{ flexDirection: 'row', gap: 6, width: '100%' }}>
                 {HomeHeaderButtons.slice(i * 2, i * 2 + 2).map((item) => (
-                  <HomeHeaderButton key={item.title} item={item} />
+                  <HomeHeaderButton
+                    key={item.title} item={item}
+                  />
                 ))}
                 {HomeHeaderButtons.slice(i * 2, i * 2 + 2).length === 1 && <View style={{ flex: 1 }} />}
               </View>
@@ -168,9 +180,6 @@ const HomeHeader = () => {
         </ListTouchable>
       )}
 
-      {__DEV__ && 1 === 2 && (
-        <WrappedBanner />
-      )}
     </View>
   );
 };

@@ -27,7 +27,9 @@ jobs:
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 24
-          cache: npm
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Set up Java
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
@@ -39,22 +41,24 @@ jobs:
         uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: bun install --frozen-lockfile
+
+      # Bun blocks untrusted postinstall scripts; Skia's copies its prebuilt libs into libs/android
+      - name: Install Skia prebuilt libraries
+        run: node node_modules/@shopify/react-native-skia/scripts/install-libs.js
 
       - name: Create secrets.json
         env:
-          APP_KEY: ${{ secrets.COUNTLY_APP_KEY }}
-          SALT: ${{ secrets.COUNTLY_SALT }}
-          SERVER_URL: ${{ secrets.COUNTLY_SERVER_URL }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_HOST: ${{ secrets.POSTHOG_HOST }}
         run: |
           jq -n \
-            --arg app_key "$APP_KEY" \
-            --arg salt "$SALT" \
-            --arg server_url "$SERVER_URL" \
-            '{APP_KEY: $app_key, SALT: $salt, SERVER_URL: $server_url}' > secrets.json
+            --arg api_key "$POSTHOG_API_KEY" \
+            --arg host "$POSTHOG_HOST" \
+            '{POSTHOG_API_KEY: $api_key, POSTHOG_HOST: $host}' > secrets.json
 
       - name: Prebuild Android
-        run: npx expo prebuild --platform android --clean
+        run: bunx expo prebuild --platform android --clean
 
       - name: Decode keystore
         env:
@@ -78,6 +82,7 @@ jobs:
         run: |
           chmod +x android/gradlew
           {
+            echo ""
             echo "org.gradle.jvmargs=-Xmx6144m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError"
             echo "org.gradle.parallel=true"
             echo "org.gradle.caching=true"

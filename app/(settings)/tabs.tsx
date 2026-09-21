@@ -8,9 +8,11 @@ import Icon from "@/ui/components/Icon";
 import List from "@/ui/new/List";
 import Typography from "@/ui/new/Typography";
 import NativeSwitch from "@/ui/native/NativeSwitch";
+import { useTheme } from "expo-router/react-navigation";
 
 const SettingsTabs = () => {
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   const settingsStore = useSettingsStore(state => state.personalization);
   const mutateProperty = useSettingsStore(state => state.mutateProperty);
@@ -39,12 +41,6 @@ const SettingsTabs = () => {
       name: t("Tab_Grades"),
       icon: "grades",
       enabled: !disabledTabs.includes("grades"),
-    },
-    {
-      id: "news",
-      name: t("Tab_News"),
-      icon: "newspaper",
-      enabled: !disabledTabs.includes("news"),
     },
   ];
 
@@ -78,7 +74,7 @@ const SettingsTabs = () => {
     <List
       contentInsetAdjustmentBehavior="always"
       contentContainerStyle={{ padding: 16 }}
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: colors.overground }}
     >
       {tabs.map(tab => (
         <List.Item key={tab.id}>

@@ -1,6 +1,5 @@
 import { Platform } from "react-native";
 import AndroidBackButton from "./AndroidBackButton";
-import AndroidHeaderBackground from "@/components/AndroidHeaderBackground";
 import { useFont } from "./fonts";
 import React from "react";
 
@@ -9,7 +8,7 @@ export const useScreenOptions = (): any => {
   const font = useFont();
 
   return React.useMemo(() => ({
-    headerLargeTitle: true,
+    headerLargeTitle: false,
     headerTransparent: Platform.OS === "ios" && parseInt(Platform.Version) >= 26,
     headerBackButtonDisplayMode:
       Platform.OS === "ios" && parseInt(Platform.Version) < 26
