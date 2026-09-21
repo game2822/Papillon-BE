@@ -10,7 +10,7 @@ export default {
     version: PackageJSON.version,
     orientation: "default",
     icon: "./assets/images/icon.png",
-    scheme: ["papillon", "izly", "skoapp-prod"],
+    scheme: ["papillon", "izly", "skoapp-prod", "smsc"],
     platforms: ["ios", "android"],
     userInterfaceStyle: "automatic",
     ios: {
@@ -25,7 +25,7 @@ export default {
         AppGroupIdentifier: "group.xyz.getpapillon",
         CFBundleURLTypes: [
           {
-            CFBundleURLSchemes: ["papillon", "izly", "skoapp-prod"],
+            CFBundleURLSchemes: ["papillon", "izly", "skoapp-prod", "smsc"],
           },
         ],
         CFBundleLocalizations: [

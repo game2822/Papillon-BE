@@ -5,6 +5,7 @@ import { Identification } from "ezly";
 import { SessionHandle } from "@blockshub/pawnote-lts";
 import { Client as ArdClient } from "@blockshub/blocksrd";
 import { Skolengo as SkolengoSession } from "skolengojs";
+import { SmartSchool as SmartSchoolSession } from "smartschooljs";
 import { Client as TurboselfClient } from "turboself-api";
 
 import { Appscho } from "@/services/appscho";
@@ -32,6 +33,7 @@ import { EcoleDirecte } from "../ecoledirecte";
 import { Izly } from "../izly";
 import { Multi } from "../multi";
 import { Skolengo } from "../skolengo";
+import { Smartschool } from "../smartschool";
 import { TurboSelf } from "../turboself";
 import { Balance } from "./balance";
 import { Kid } from "./kid";
@@ -62,6 +64,7 @@ export interface SchoolServicePlugin {
     | MultiClient
     | SessionHandle
     | SkolengoSession
+    | SmartSchoolSession
     | Client
     | ArdClient
     | TurboselfClient
@@ -70,7 +73,7 @@ export interface SchoolServicePlugin {
 
   refreshAccount: (
     credentials: Auth
-  ) => Promise<Pronote | Skolengo | EcoleDirecte | Multi | TurboSelf | ARD | Izly | Alise | Appscho | MockData>;
+  ) => Promise<Pronote | Skolengo | Smartschool | EcoleDirecte | Multi | TurboSelf | ARD | Izly | Alise | Appscho | MockData>;
   isTokenValid?: () => boolean;
   getKids?: () => Kid[];
   getCanteenKind?: () => CanteenKind;

@@ -77,6 +77,18 @@ export function GetSupportedServices(redirect: (path: { pathname: string, option
       color: 'light' as const,
     },
     {
+      name: "smartschool",
+      route: "smartschool",
+      title: t("ONBOARDING_SERVICE_SMARTSCHOOL"),
+      type: ["school"],
+      image: require("@/assets/images/service_smartschool.png"),
+      onPress: () => {
+        redirect({ pathname: './smartschool/url', options: { service: Services.SMARTSCHOOL } });
+      },
+      variant: 'service' as const,
+      color: 'light' as const,
+    },
+    {
       name: "univ-lorraine",
       title: t("ONBOARDING_SERVICE_UNIV_LORRAINE"),
       hasLimitedSupport: false,

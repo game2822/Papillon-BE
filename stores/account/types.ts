@@ -72,7 +72,7 @@ export interface TeamModalStorage {
 }
 
 export interface CustomisableSubject {
-  id: string; color: string; emoji: string; name: string 
+  id: string; color: string; emoji: string; name: string
 }
 
 export interface CustomisationStorage {
@@ -133,6 +133,7 @@ export interface Auth {
 export enum Services {
   PRONOTE,
   SKOLENGO,
+  SMARTSCHOOL,
   ECOLEDIRECTE,
   TURBOSELF,
   ARD,

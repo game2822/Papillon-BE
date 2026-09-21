@@ -74,6 +74,10 @@ export default function OnboardingLayout() {
           options={{ headerShown: false, title: "", presentation: "formSheet" }}
         />
         <Stack.Screen
+          name="services/smartschool"
+          options={{ headerShown: false, title: "", presentation: "modal" }}
+        />
+        <Stack.Screen
           name="services/multi"
           options={{ headerShown: false, title: "", presentation: "formSheet" }}
         />
