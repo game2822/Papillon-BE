@@ -1,11 +1,11 @@
-import { useHeaderHeight } from "@react-navigation/elements";
-import { useRoute, useTheme } from "@react-navigation/native";
+import { useHeaderHeight, useRoute, useTheme } from "expo-router/react-navigation";
 import { useNavigation } from "expo-router";
-import { geolocation } from "pawnote";
+import { geolocation } from "@blockshub/pawnote-lts";
 import React, { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { formatSchoolName } from '@/utils/format/formatSchoolName';
 
 import ActivityIndicator from "@/ui/components/ActivityIndicator";
 import { Dynamic } from "@/ui/components/Dynamic";
@@ -85,7 +85,7 @@ export default function PronoteLoginSelectEtab() {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.select({ android: 0, default: 20 })}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.overground }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.select({ android: 0, default: 20 })}>
       <List
         animated
         ListHeaderComponent={<PronoteSearchHeader search={search} setSearch={setSearch} loading={loading} t={t} />}
@@ -99,7 +99,7 @@ export default function PronoteLoginSelectEtab() {
         style={{ flex: 1 }}
       >
 
-        {filteredSchools.map((school, i) => (
+        {filteredSchools.map((school) => (
           <List.Item animated={true} id={school.url} key={school.url} onPress={() => selectSchool(school)}>
             <List.Leading>
               <Image
@@ -108,7 +108,7 @@ export default function PronoteLoginSelectEtab() {
               />
             </List.Leading>
             <Typography variant="title" numberOfLines={2}>
-              {school.name}
+              {formatSchoolName(school.name)}
             </Typography>
             <Typography variant="body" color="textSecondary" numberOfLines={1}>
               {school.url}

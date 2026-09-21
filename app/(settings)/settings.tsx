@@ -1,5 +1,5 @@
 import { Papicons } from '@getpapillon/papicons';
-import { useTheme } from "@react-navigation/native";
+import { useTheme, useHeaderHeight } from "expo-router/react-navigation";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -28,7 +28,6 @@ import { formatSchoolName } from '@/utils/format/formatSchoolName';
 import List, { ListTouchable } from '@/ui/new/List';
 import Typography from '@/ui/new/Typography';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useHeaderHeight } from '@react-navigation/elements';
 
 export default function SettingsIndex() {
   const router = useRouter();
@@ -80,14 +79,14 @@ export default function SettingsIndex() {
           color: "#0038A8",
           onPress: () => Alert.alert("Ça arrive... ✨", "Cette fonctionnalité n'est pas encore disponible.")
         },*/
-        {
+        /*{
           title: t("Settings_Transport_Title"),
           description: t("Settings_Transport_Description"),
           papicon: <Papicons name={"Bus"} />,
           icon: <BusIcon />,
           color: "#000",
           onPress: () => router.navigate("/(settings)/transport"),
-        },
+        },*/
         {
           title: t("Settings_Features_Title"),
           description: t("Settings_Features_Description"),
@@ -251,7 +250,7 @@ export default function SettingsIndex() {
 
               return (
                 <View
-                  style={{ flex: 1, borderRadius: 22, elevation: 2, overflow: "hidden" }}
+                  style={{ flex: 1, borderRadius: 22, elevation: 2, overflow: Platform.OS === 'ios' ? "visible" : "hidden" }}
                   key={button.title}
                 >
                 <ListTouchable
@@ -263,9 +262,9 @@ export default function SettingsIndex() {
                     direction="vertical"
                     gap={8}
                     padding={[14, 14]}
-                    radius={22}
+                    radius={23}
                     style={[
-                      Platform.OS === 'ios' ? { borderColor: adjust(button.color, theme.dark ? 0.3 : -0.3) + "45" } : { backgroundColor: adjust(button.color, theme.dark ? -0.8 : 0.8), borderWidth: 0 },
+                      Platform.OS === 'ios' ? { borderColor: adjust(button.color, theme.dark ? 0.3 : -0.3) + "45" } : { backgroundColor: adjust(button.color, theme.dark ? -0.8 : 0.8), shadowOpacity: 0 },
                     ]}
                   >
                     {Platform.OS === 'ios' && (
@@ -303,6 +302,7 @@ export default function SettingsIndex() {
   return (
     <>
       <List
+        style={{ flex: 1, backgroundColor: colors.overground }}
         contentInsetAdjustmentBehavior="automatic"
         gap={12}
         ListHeaderComponent={(
@@ -337,7 +337,7 @@ export default function SettingsIndex() {
             />
           </View>
         )}
-        contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16, paddingTop: finalHeaderHeight + 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom, paddingTop: finalHeaderHeight }}
       >
         {MoreSettingsList.map(section => (
           <List.Section key={section.title}>
@@ -364,4 +364,4 @@ export default function SettingsIndex() {
       </List>
     </>
   );
-};
+}

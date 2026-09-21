@@ -1,25 +1,20 @@
-import PackageJSON from "./package.json" with { type: 'json' };
+import PackageJSON from "./package.json" with { type: "json" };
 
 // versionCode: seconds since 2020-01-01 UTC — unique, strictly increasing, well under the 2.1e9 cap
-const androidVersionCode = Math.floor(Date.now() / 1000) - 1577836800
+const androidVersionCode = Math.floor(Date.now() / 1000) - 1577836800;
 
 export default {
   expo: {
     name: "Papillon",
     slug: "papillon",
     version: PackageJSON.version,
-    orientation: "portrait",
+    orientation: "default",
     icon: "./assets/images/icon.png",
     scheme: ["papillon", "izly", "skoapp-prod"],
     platforms: ["ios", "android"],
     userInterfaceStyle: "automatic",
-    newArchEnabled: true,
-    splash: {
-      image: "./assets/images/splash.png",
-      resizeMode: "cover",
-      backgroundColor: "#003A21",
-    },
     ios: {
+      appleTeamId: "7RXNP6V83P",
       appStoreUrl:
         "https://apps.apple.com/us/app/papillon-lappli-scolaire/id6477761165",
       bundleIdentifier: "xyz.getpapillon.ios",
@@ -27,6 +22,7 @@ export default {
       icon: "./assets/app.icon",
       minimumOSVersion: "17.6",
       infoPlist: {
+        AppGroupIdentifier: "group.xyz.getpapillon",
         CFBundleURLTypes: [
           {
             CFBundleURLSchemes: ["papillon", "izly", "skoapp-prod"],
@@ -76,6 +72,12 @@ export default {
         CADisableMinimumFrameDurationOnPhone: true,
         LSApplicationQueriesSchemes: ["maps"],
       },
+      entitlements: {
+        "com.apple.security.application-groups": [
+          "group.xyz.getpapillon",
+          "group.xyz.getpapillon.ios",
+        ],
+      },
       supportsTablet: true,
       config: {
         usesNonExemptEncryption: false,
@@ -93,14 +95,8 @@ export default {
         backgroundColor: "#ffffff",
         monochromeImage: "./assets/images/monochrome-icon.png",
       },
-      edgeToEdgeEnabled: true,
-      splash: {
-        image: "./assets/images/splash_android.png",
-        resizeMode: "cover",
-        backgroundColor: "#003A21",
-      },
       supportsTablet: true,
-      predictiveBackGestureEnabled: true
+      predictiveBackGestureEnabled: true,
     },
     web: {
       bundler: "metro",
@@ -108,13 +104,28 @@ export default {
       favicon: "./assets/images/favicon.png",
     },
     plugins: [
+      "expo-ios-scene-lifecycle-plugin",
       "expo-router",
+      "expo-status-bar",
       "expo-font",
       "expo-video",
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          enableBackgroundPlayback: false,
+        },
+      ],
       "expo-localization",
       "expo-asset",
       "@react-native-community/datetimepicker",
+      [
+        "expo-splash-screen",
+        {
+          backgroundColor: "#29947A",
+          image: "./assets/images/logotype.png",
+          imageWidth: 240,
+        },
+      ],
       [
         "expo-image-picker",
         {
@@ -151,6 +162,48 @@ export default {
         },
       ],
       [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "xyz.getpapillon.ios.widgets",
+          "groupIdentifier": "group.xyz.getpapillon.ios",
+          "enablePushNotifications": true,
+          "widgets": [
+            {
+              "name": "Calendar",
+              "displayName": "Emploi du temps",
+              "description": "Affiche tes prochains cours et événements",
+              "ios": {
+                "supportedFamilies": ["systemSmall", "systemMedium"]
+              }
+            },
+            {
+              "name": "Tasks",
+              "displayName": "Tâches",
+              "description": "Affiche tes tâches à faire",
+              "ios": {
+                "supportedFamilies": ["systemSmall", "systemMedium", "systemLarge"]
+              }
+            },
+            {
+              "name": "Notes",
+              "displayName": "Notes",
+              "description": "Affiche tes dernières notes",
+              "ios": {
+                "supportedFamilies": ["systemSmall", "systemMedium", "systemLarge"]
+              }
+            },
+            {
+              "name": "Averages",
+              "displayName": "Moyenne générale",
+              "description": "Affiche ta moyenne générale",
+              "ios": {
+                "supportedFamilies": ["systemSmall", "systemMedium", "systemLarge"]
+              }
+            }
+          ]
+        }
+      ],
+      [
         "expo-build-properties",
         {
           android: {
@@ -161,9 +214,13 @@ export default {
               { name: "SDWebImage", modular_headers: true },
               { name: "SDWebImageSVGCoder", modular_headers: true },
             ],
+            buildReactNativeFromSource: false,
           },
         },
       ],
+      "./plugins/with-widget-fonts",
+      "./plugins/with-ios-native-files",
+      "./plugins/with-android-gradle-properties-newline",
     ],
     experiments: {
       typedRoutes: true,

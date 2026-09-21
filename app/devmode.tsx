@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Alert, Switch, View } from "react-native";
 import { router } from "expo-router";
-import { useHeaderHeight } from "@react-navigation/elements";
+import { useHeaderHeight, useTheme } from "expo-router/react-navigation";
 import { Papicons } from "@getpapillon/papicons";
 
 import { useLogStore, useNetworkStore } from "@/stores/logs";
@@ -10,16 +10,21 @@ import Stack from "@/ui/components/Stack";
 import Typography from "@/ui/new/Typography";
 import Icon from "@/ui/components/Icon";
 import SectionHeader from "@/ui/components/SectionHeader";
-import { useTheme } from "@react-navigation/native";
 import Button from "@/ui/new/Button";
 import { database } from "@/database";
+import { ClearDatabaseForAccount } from "@/database/DatabaseProvider";
 import { useAccountStore } from "@/stores/account";
+import { Services } from "@/stores/account/types";
 import { useSettingsStore } from "@/stores/settings";
+import { useTipsStore } from "@/stores/tips";
+import { showAllTips, tipsAreSupported } from "@/modules/papillon-tips";
 import { useMagicStore } from "@/stores/magic";
 import ModelManager from "@/utils/magic/ModelManager";
 import { MAGIC_URL } from "@/utils/endpoints";
 import { initializeTransport } from "@/utils/transport";
 import LogIcon from "@/components/Log/LogIcon";
+import { getManager, initializeAccountManager } from "@/services/shared";
+import { warn } from "@/utils/logger/logger";
 
 const HOSTS: Record<string, { title: string; icon: string }> = {
   "index-education": { title: "PRONOTE", icon: "Pronote" },
@@ -38,6 +43,9 @@ export default function DevMode() {
   const [logsVisible, setLogsVisible] = useState<boolean>(false);
   const hosts = useNetworkStore((state) => state.hosts);
   const headerHeight = useHeaderHeight();
+  const mockDataEnabled = useSettingsStore(
+    state => state.personalization.mockDataEnabled ?? false
+  );
 
   const entries = useMemo(() => {
     return Array.from(hosts.entries())
@@ -145,9 +153,128 @@ export default function DevMode() {
     Alert.alert("Succès", `Cette opération a été effectué avec succès.`);
   }
 
+  const setMockDataEnabled = (enabled: boolean) => {
+    if (enabled) {
+      Alert.alert(
+        "Activer Mock Data",
+        "Cette option de développement rend un service scolaire fictif disponible dans l'ajout de compte.",
+        [
+          { text: "Annuler", style: "cancel" },
+          {
+            text: "Activer",
+            onPress: () => {
+              useSettingsStore.getState().mutateProperty("personalization", {
+                mockDataEnabled: true,
+              });
+            },
+          },
+        ],
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Désactiver Mock Data",
+      "Les services Mock Data seront retirés de tous les comptes et leurs données locales seront supprimées.",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Désactiver",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const accountStore = useAccountStore.getState();
+              const mockServices = accountStore.accounts.flatMap(account =>
+                account.services.filter(service => service.serviceId === Services.MOCK_DATA)
+              );
+
+              for (const service of mockServices) {
+                await ClearDatabaseForAccount(service.id);
+                getManager()?.removeService(service.id);
+                useAccountStore.getState().removeServiceFromAccount(service.id);
+              }
+
+              useSettingsStore.getState().mutateProperty("personalization", {
+                mockDataEnabled: false,
+              });
+
+              const activeAccountId = useAccountStore.getState().lastUsedAccount;
+              if (activeAccountId) {
+                try {
+                  await initializeAccountManager(activeAccountId);
+                } catch (cause) {
+                  warn(`Mock Data was disabled, but the account manager could not refresh: ${String(cause)}`);
+                }
+              }
+            } catch (cause) {
+              Alert.alert("Erreur", `Impossible de désactiver Mock Data : ${String(cause)}`);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const forceAllTips = useTipsStore(state => state.forceAll);
+
+  const triggerAllTips = async () => {
+    useTipsStore.getState().setForceAll(true);
+    await showAllTips();
+    Alert.alert(
+      "Astuces forcées",
+      "Chaque astuce réapparaîtra sur son écran sans attendre le nombre d'ouvertures habituel, et sans consommer ses passages."
+    );
+  };
+
+  // Only lifts our own override. TipKit's `showAllTipsForTesting` has no
+  // counterpart that simply cancels it — `hideAllTipsForTesting` force-hides
+  // everything instead — so the override itself dies with the process, and is
+  // just not re-applied at the next launch.
+  const stopForcingTips = () => {
+    useTipsStore.getState().setForceAll(false);
+    Alert.alert(
+      "Astuces",
+      "Les astuces reprennent leur rythme normal. Celles déjà à l'écran le resteront jusqu'au prochain lancement."
+    );
+  };
+
+  const resetAllTips = () => {
+    Alert.alert(
+      "Réinitialiser les astuces",
+      "Les compteurs d'ouverture et d'affichage repartent de zéro. TipKit n'accepte d'oublier les astuces déjà fermées qu'au démarrage, alors elles reviendront au prochain lancement de l'app.",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Réinitialiser",
+          style: "destructive",
+          onPress: () => {
+            const tips = useTipsStore.getState();
+            tips.reset();
+            tips.requestDatastoreReset();
+          },
+        },
+      ]
+    );
+  };
+
   return (
-    <View style={{ paddingTop: headerHeight, padding: 16, flex: 1 }}>
-      <List showsVerticalScrollIndicator={false} animated contentInsetAdjustmentBehavior="always">
+    <View style={{ flex: 1, backgroundColor: colors.overground }}>
+      <List showsVerticalScrollIndicator={false} animated contentInsetAdjustmentBehavior="always" contentContainerStyle={{ padding: 16 }}>
+        <List.Section>
+          <List.SectionTitle>
+            <Papicons name="Code" color={String(colors.text) + "88"} />
+            <List.Label>Données de développement</List.Label>
+          </List.SectionTitle>
+          <List.Item>
+            <Typography variant="action">Ajouter des données fictives</Typography>
+            <Typography variant="body2" color="textSecondary">
+              Affiche un service scolaire fictif dans l'ajout de compte.
+            </Typography>
+            <List.Trailing>
+              <Switch value={mockDataEnabled} onValueChange={setMockDataEnabled} />
+            </List.Trailing>
+          </List.Item>
+        </List.Section>
         <List.Section>
           <List.SectionTitle>
             <Papicons name="Code" color={colors.text + 88} />
@@ -191,6 +318,54 @@ export default function DevMode() {
           </List.SectionTitle>
           {entries.map(renderHostRow)}
         </List.Section>
+        <List.Section>
+          <List.SectionTitle>
+            <Papicons name="phone" color={colors.text + 88} />
+            <List.Label>Écrans</List.Label>
+          </List.SectionTitle>
+          <List.Item onPress={() => router.push("/(modals)/welcome")}>
+            <List.Leading>
+              <Icon>
+                <Papicons name="Sparkles" />
+              </Icon>
+            </List.Leading>
+            <Typography variant="action">Ouvrir le modal de bienvenue</Typography>
+          </List.Item>
+        </List.Section>
+        {tipsAreSupported && (
+          <List.Section>
+            <List.SectionTitle>
+              <Papicons name="Sparkles" color={String(colors.text) + "88"} />
+              <List.Label>Astuces</List.Label>
+            </List.SectionTitle>
+            <List.Item onPress={() => (forceAllTips ? stopForcingTips() : triggerAllTips())}>
+              <List.Leading>
+                <Icon>
+                  <Papicons name="Sparkles" />
+                </Icon>
+              </List.Leading>
+              <Typography variant="action">
+                {forceAllTips ? "Ne plus forcer les astuces" : "Forcer toutes les astuces"}
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                Affiche chaque astuce dès le prochain passage sur son écran, sans
+                attendre le nombre d'ouvertures habituel.
+              </Typography>
+            </List.Item>
+            <List.Item onPress={resetAllTips}>
+              <List.Leading>
+                <Icon>
+                  <Papicons name="Trash" />
+                </Icon>
+              </List.Leading>
+              <Typography variant="action">Réinitialiser toutes les astuces</Typography>
+              <Typography variant="body2" color="textSecondary">
+                Remet les compteurs à zéro. Les astuces déjà fermées reviennent au
+                prochain lancement.
+              </Typography>
+            </List.Item>
+          </List.Section>
+        )}
         <List.Section>
           <List.SectionTitle>
             <Papicons name="Bus" color={colors.text + 88} />

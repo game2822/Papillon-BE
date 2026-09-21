@@ -1,5 +1,5 @@
 import { Papicons } from "@getpapillon/papicons";
-import { useTheme } from "@react-navigation/native";
+import { useTheme } from "expo-router/react-navigation";
 import * as React from "react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -58,7 +58,7 @@ export default function TransportView() {
 
   return (
     <List
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: theme.colors.overground }}
       contentContainerStyle={{
         padding: 20,
         paddingTop: 16,

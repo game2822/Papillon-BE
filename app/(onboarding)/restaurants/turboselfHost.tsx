@@ -22,10 +22,11 @@ import Button from '@/ui/components/Button';
 import uuid from '@/utils/uuid/uuid';
 import { useAccountStore } from '@/stores/account';
 import { Services } from '@/stores/account/types';
-import { useTheme } from '@react-navigation/native';
+import { useTheme } from "expo-router/react-navigation";
 import AnimatedPressable from '@/ui/components/AnimatedPressable';
 import OnboardingBackButton from "@/components/onboarding/OnboardingBackButton";
 import { useTranslation } from 'react-i18next';
+import { initializeAccountManager } from '@/services/shared';
 
 const INITIAL_HEIGHT = 570;
 const COLLAPSED_HEIGHT = 270;
@@ -221,6 +222,27 @@ export default function TurboSelfSelectHost() {
                 const authentification = await authenticateWithCredentials(String(search.username), String(search.password), true, false, user.id)
                 const accountId = uuid()
                 const store = useAccountStore.getState()
+                const service = {
+                  id: accountId,
+                  auth: {
+                    additionals: {
+                      username: String(search.username),
+                      password: String(search.password),
+                      "hoteId": authentification.host?.id ?? "N/A"
+                    }
+                  },
+                  serviceId: Services.TURBOSELF,
+                  createdAt: (new Date()).toISOString(),
+                  updatedAt: (new Date()).toISOString()
+                }
+
+                if (String(search.action) === "addService") {
+                  store.addServiceToAccount(store.lastUsedAccount, service)
+                  await initializeAccountManager()
+                  router.back();
+                  router.back();
+                  return router.back();
+                }
 
                 store.addAccount({
                   id: accountId,
@@ -228,19 +250,7 @@ export default function TurboSelfSelectHost() {
                   lastName: authentification.host?.lastName ?? "N/A",
                   schoolName: authentification.establishment?.name,
                   className: authentification.host?.division,
-                  services: [{
-                    id: accountId,
-                    auth: {
-                      additionals: {
-                        username: String(search.username),
-                        password: String(search.password),
-                        "hoteId": authentification.host?.id ?? "N/A"
-                      }
-                    },
-                    serviceId: Services.TURBOSELF,
-                    createdAt: (new Date()).toISOString(),
-                    updatedAt: (new Date()).toISOString()
-                  }],
+                  services: [service],
                   createdAt: (new Date()).toISOString(),
                   updatedAt: (new Date()).toISOString()
                 })
@@ -268,7 +278,7 @@ export default function TurboSelfSelectHost() {
                     <Papicons name={"User"} />
                   </Icon>
                   <Typography variant="body2" nowrap ellipsizeMode="tail">
-                    {`${(item as Host).lastName.toUpperCase()} ${(item as Host).firstName}`}
+                    {`${(item as Host).lastName?.toUpperCase() ?? ""} ${(item as Host).firstName ?? ""}`}
                   </Typography>
                 </Stack>
               </AnimatedPressable>

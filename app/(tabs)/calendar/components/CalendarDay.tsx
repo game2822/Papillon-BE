@@ -1,16 +1,16 @@
-import { useNavigation } from "expo-router";
+import { Link } from "expo-router";
 import { t } from "i18next";
 import React, { useMemo, useRef } from "react";
-import { Dimensions,FlatList, Platform, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { Course as SharedCourse, CourseStatus } from "@/services/shared/timetable";
 import { TransportStorage } from "@/stores/account/types";
 import Course from "@/ui/components/Course";
 import { Colors, getSubjectColor } from "@/utils/subjects/colors";
-import { getSubjectEmoji } from "@/utils/subjects/emoji";
 import { getSubjectName } from '@/utils/subjects/name';
 
 import { EmptyCalendar } from './EmptyCalendar';
+import { getCourseRouteId } from '@/database/useTimetable';
 
 interface CalendarDayProps {
   dayDate: Date;
@@ -18,10 +18,11 @@ interface CalendarDayProps {
   isRefreshing: boolean;
   onRefresh: () => void;
   colors: { primary: string, background: string };
-  headerHeight: number;
   insets: any;
   tabBarHeight: number;
   transportInfo?: TransportStorage;
+  /** The timetable could not be loaded: an empty day means "unknown", not "free". */
+  hasError?: boolean;
 }
 
 function areCoursesEquivalent(a: SharedCourse[], b: SharedCourse[]) {
@@ -46,9 +47,8 @@ function areCoursesEquivalent(a: SharedCourse[], b: SharedCourse[]) {
   return true;
 }
 
-export const CalendarDay = React.memo(({ dayDate, courses, isRefreshing, onRefresh, colors, headerHeight, insets, tabBarHeight, transportInfo }: CalendarDayProps) => {
-  const navigation = useNavigation<any>();
-
+export const CalendarDay = React.memo(({ dayDate, courses, isRefreshing, onRefresh, colors, insets, tabBarHeight, transportInfo, hasError = false }: CalendarDayProps) => {
+  const { width: windowWidth } = useWindowDimensions();
   // Cache to preserve event object identity by id
   const eventCache = useRef<{ [id: string]: any }>({});
 
@@ -113,16 +113,16 @@ export const CalendarDay = React.memo(({ dayDate, courses, isRefreshing, onRefre
   const isEmpty = enrichedEvents.length === 0;
 
   return (
-    <View style={{ width: Dimensions.get("window").width, flex: 1 }}>
+    <View style={{ width: windowWidth, flex: 1 }}>
       <FlatList
         data={enrichedEvents}
-        style={styles.container}
+        style={[styles.container, insets.left > 0 ? { marginLeft: insets.left } : null]}
         showsVerticalScrollIndicator={false}
+        contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
           paddingHorizontal: 12,
           paddingVertical: 12,
           gap: 4,
-          paddingTop: headerHeight - 8,
           paddingBottom: tabBarHeight + 6,
           ...(isEmpty ? { alignItems: "center" } : {}),
         }}
@@ -132,11 +132,10 @@ export const CalendarDay = React.memo(({ dayDate, courses, isRefreshing, onRefre
             onRefresh={onRefresh}
             colors={[colors.primary]}
             progressBackgroundColor={colors.background}
-            progressViewOffset={Platform.OS === 'android' ? headerHeight : 0}
           />
         }
         keyExtractor={item => item.id || `${item.type}-${item.from || item.targetTime}`}
-        ListEmptyComponent={<EmptyCalendar />}
+        ListEmptyComponent={<EmptyCalendar hasError={hasError} />}
         renderItem={({ item }: { item: SharedCourse }) => {
           if ((item as any).type === "separator") {
             return (
@@ -147,50 +146,33 @@ export const CalendarDay = React.memo(({ dayDate, courses, isRefreshing, onRefre
                 start={Math.floor(item.from.getTime() / 1000)}
                 end={Math.floor(item.to.getTime() / 1000)}
                 showTimes={false}
-                onPress={() => {
-                  navigation.navigate("(modals)/course", {
-                    course: item,
-                    subjectInfo: {
-                      id: item.subject,
-                      name: getSubjectName(item.subject),
-                      color: getSubjectColor(item.subject) || Colors[0],
-                      emoji: getSubjectEmoji(item.subject),
-                    },
-                  });
-                }}
               />
             );
           }
 
           return (
-            <Course
-              id={item.id}
-              name={getSubjectName(item.subject)}
-              teacher={item.teacher}
-              room={item.room}
-              color={getSubjectColor(item.subject) || Colors[0]}
-              status={{
-                label: item.customStatus
-                  ? item.customStatus
-                  : getStatusText(item.status),
-                canceled: item.status === CourseStatus.CANCELED,
-              }}
-              variant="primary"
-              start={Math.floor(item.from.getTime() / 1000)}
-              end={Math.floor(item.to.getTime() / 1000)}
-              readonly={!!item.createdByAccount}
-              onPress={() => {
-                navigation.navigate("(modals)/course", {
-                  course: item,
-                  subjectInfo: {
-                    id: item.subject,
-                    name: getSubjectName(item.subject),
-                    color: getSubjectColor(item.subject) || Colors[0],
-                    emoji: getSubjectEmoji(item.subject),
-                  },
-                });
-              }}
-            />
+            <Link
+              href={{ pathname: "/(modals)/course/[id]", params: { id: getCourseRouteId(item) } }}
+              asChild
+            >
+              <Course
+                id={item.id}
+                name={getSubjectName(item.subject)}
+                teacher={item.teacher}
+                room={item.room}
+                color={getSubjectColor(item.subject) || Colors[0]}
+                status={{
+                  label: item.customStatus
+                    ? item.customStatus
+                    : getStatusText(item.status),
+                  canceled: item.status === CourseStatus.CANCELED,
+                }}
+                variant="primary"
+                start={Math.floor(item.from.getTime() / 1000)}
+                end={Math.floor(item.to.getTime() / 1000)}
+                readonly={!!item.createdByAccount}
+              />
+            </Link>
           );
         }}
       />
@@ -200,8 +182,9 @@ export const CalendarDay = React.memo(({ dayDate, courses, isRefreshing, onRefre
   return (
     prevProps.dayDate.getTime() === nextProps.dayDate.getTime() &&
     prevProps.isRefreshing === nextProps.isRefreshing &&
+    prevProps.hasError === nextProps.hasError &&
     prevProps.onRefresh === nextProps.onRefresh &&
-    prevProps.headerHeight === nextProps.headerHeight &&
+    prevProps.insets.left === nextProps.insets.left &&
     areCoursesEquivalent(prevProps.courses, nextProps.courses)
   );
 });

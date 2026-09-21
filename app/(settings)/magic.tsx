@@ -1,5 +1,5 @@
 import { Papicons } from "@getpapillon/papicons";
-import { useTheme } from "@react-navigation/native";
+import { useTheme } from "expo-router/react-navigation";
 import { t } from "i18next";
 import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
@@ -119,7 +119,7 @@ export default function SettingsMagic() {
 
   return (
     <List
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: colors.overground }}
       contentContainerStyle={{ padding: 20 }}
       contentInsetAdjustmentBehavior="always"
     >

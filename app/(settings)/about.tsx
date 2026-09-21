@@ -1,5 +1,5 @@
 import { Papicons } from "@getpapillon/papicons";
-import { useTheme } from "@react-navigation/native";
+import { useTheme } from "expo-router/react-navigation";
 import { useRouter } from "expo-router";
 import { Github, Languages, Users } from "lucide-react-native";
 import React, { useState } from "react";
@@ -191,7 +191,7 @@ export default function SettingsAbout() {
 
   return (
     <List
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: theme.colors.overground }}
       contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 20 }}
       contentInsetAdjustmentBehavior="always"
       showsVerticalScrollIndicator={false}

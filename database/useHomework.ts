@@ -27,6 +27,38 @@ function mapHomeworkToShared(homework: Homework): SharedHomework {
   };
 }
 
+export function getHomeworkRouteId(homework: SharedHomework): string {
+  return generateId(
+    homework.subject +
+      homework.content +
+      homework.createdByAccount +
+      homework.dueDate.toDateString()
+  );
+}
+
+export async function getHomeworkById(id: string): Promise<SharedHomework | undefined> {
+  const database = getDatabaseInstance();
+  const records = await database
+    .get<Homework>("homework")
+    .query(Q.where("homeworkId", id))
+    .fetch();
+  const cachedHomework = records[0] ? mapHomeworkToShared(records[0]) : undefined;
+
+  if (!cachedHomework) return undefined;
+
+  try {
+    const { getManager } = await import("@/services/shared");
+    const manager = getManager();
+    const freshHomeworks = await manager?.getHomeworks(
+      getWeekNumberFromDate(cachedHomework.dueDate)
+    );
+    return freshHomeworks?.find(homework => getHomeworkRouteId(homework) === id) ?? cachedHomework;
+  } catch (error) {
+    warn(`Unable to refresh homework ${id}: ${String(error)}`);
+    return cachedHomework;
+  }
+}
+
 export function useHomeworkForWeek(weekNumber: number, refresh = 0) {
   const database = useDatabase();
   const [homeworks, setHomeworks] = useState<SharedHomework[]>([]);
@@ -38,6 +70,55 @@ export function useHomeworkForWeek(weekNumber: number, refresh = 0) {
     };
     fetchHomeworks();
   }, [weekNumber, refresh, database]);
+
+  return homeworks;
+}
+
+// Reads several weeks in one pass so a pager can render neighbouring weeks
+// without waiting for their own effect to run. Weeks that drop out of the
+// requested window are kept for one step, so scrolling back does not flash an
+// empty page before the query resolves.
+export function useHomeworkForWeeks(weekNumbers: number[], refresh = 0) {
+  const database = useDatabase();
+  const [homeworks, setHomeworks] = useState<Record<number, SharedHomework[]>>({});
+  const weeksKey = weekNumbers.join(",");
+
+  useEffect(() => {
+    let cancelled = false;
+    const weeks = weeksKey.length > 0 ? weeksKey.split(",").map(Number) : [];
+
+    const fetchHomeworks = async () => {
+      const entries = await Promise.all(
+        weeks.map(async week => [week, await getHomeworksFromCache(week)] as const)
+      );
+      if (cancelled) {
+        return;
+      }
+      setHomeworks(previous => {
+        const next: Record<number, SharedHomework[]> = {};
+        // Anything further than one window away is dropped: the map would grow
+        // for the whole session otherwise.
+        const keep = Math.max(...weeks.map(week => Math.abs(week - weeks[0]))) + 1;
+        for (const [key, value] of Object.entries(previous)) {
+          if (Math.abs(Number(key) - weeks[0]) <= keep) {
+            next[Number(key)] = value;
+          }
+        }
+        for (const [week, value] of entries) {
+          next[week] = value;
+        }
+        return next;
+      });
+    };
+
+    if (weeks.length > 0) {
+      fetchHomeworks();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [weeksKey, refresh, database]);
 
   return homeworks;
 }
@@ -72,17 +153,20 @@ export async function addHomeworkToDatabase(homeworks: SharedHomework[]) {
     .fetch();
 
   const homeworkIds: string[] = [];
+  const refreshedServiceIds = new Set(
+    homeworks.map(homework => homework.createdByAccount)
+  );
   for (const hw of homeworks) {
     const oldId = generateId(hw.subject + hw.content + hw.createdByAccount);
-    const id = generateId(
-      hw.subject + hw.content + hw.createdByAccount + hw.dueDate.toDateString()
-    );
+    const id = getHomeworkRouteId(hw);
 
     homeworkIds.push(oldId, id);
   }
 
   const homeworksToDelete = dbHomeworks.filter(
-    dbHomeworks => !homeworkIds.includes(dbHomeworks.homeworkId)
+    dbHomework =>
+      refreshedServiceIds.has(dbHomework.createdByAccount) &&
+      !homeworkIds.includes(dbHomework.homeworkId)
   );
 
   for (const homework of homeworksToDelete) {
@@ -91,9 +175,7 @@ export async function addHomeworkToDatabase(homeworks: SharedHomework[]) {
 
   for (const hw of homeworks) {
     const oldId = generateId(hw.subject + hw.content + hw.createdByAccount);
-    const id = generateId(
-      hw.subject + hw.content + hw.createdByAccount + hw.dueDate.toDateString()
-    );
+    const id = getHomeworkRouteId(hw);
 
     const existing = await db
       .get("homework")

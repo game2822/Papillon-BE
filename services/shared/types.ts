@@ -2,12 +2,13 @@ import { Client } from "@blockshub/blocksdirecte";
 import { User } from "@blockshub/blockscho";
 import { Multi as MultiClient } from "esup-multi.js";
 import { Identification } from "ezly";
-import { SessionHandle } from "pawnote";
+import { SessionHandle } from "@blockshub/pawnote-lts";
 import { Client as ArdClient } from "@blockshub/blocksrd";
 import { Skolengo as SkolengoSession } from "skolengojs";
 import { Client as TurboselfClient } from "turboself-api";
 
 import { Appscho } from "@/services/appscho";
+import type { MockData } from "@/services/mock";
 import { Pronote } from "@/services/pronote";
 import { Attendance } from "@/services/shared/attendance";
 import {
@@ -35,6 +36,14 @@ import { TurboSelf } from "../turboself";
 import { Balance } from "./balance";
 import { Kid } from "./kid";
 
+export interface ServiceFailure {
+  service: Services;
+  displayName: string;
+  capability: Capabilities;
+  reason: unknown;
+  at: Date;
+}
+
 /** Represents a plugin for a school service.
  *
  * @property {string} displayName - The name of the service displayed to the user.
@@ -46,6 +55,7 @@ export interface SchoolServicePlugin {
   service: Services;
   capabilities: Capabilities[];
   authData: Auth;
+  requiresInternet?: boolean;
   session:
     | any
     | Identification
@@ -60,7 +70,8 @@ export interface SchoolServicePlugin {
 
   refreshAccount: (
     credentials: Auth
-  ) => Promise<Pronote | Skolengo | EcoleDirecte | Multi | TurboSelf | ARD | Izly | Alise | Appscho>;
+  ) => Promise<Pronote | Skolengo | EcoleDirecte | Multi | TurboSelf | ARD | Izly | Alise | Appscho | MockData>;
+  isTokenValid?: () => boolean;
   getKids?: () => Kid[];
   getCanteenKind?: () => CanteenKind;
   getHomeworks?: (weekNumber: number) => Promise<Homework[]>;
